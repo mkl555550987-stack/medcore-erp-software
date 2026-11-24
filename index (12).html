@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedCore AI — Enterprise Healthcare & Pharmacy OS</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+html,body{height:100%;overflow:hidden;margin:0;}
+.hidden{display:none !important;}
+*,*::before,*::after{box-sizing:border-box;}
+.no-select{user-select:none;-webkit-user-select:none;}
+.no-select input,.no-select textarea,.no-select select{user-select:text;-webkit-user-select:text;}
+
+/* ---- Gateway showcase ---- */
+.gw-glow{position:absolute;border-radius:9999px;filter:blur(90px);opacity:.55;pointer-events:none;transition:background .9s ease;}
+.slide{position:absolute;inset:0;opacity:0;transform:translateX(40px) scale(.98);transition:opacity .9s ease,transform .9s ease;display:flex;flex-direction:column;justify-content:center;padding:3.5rem 3.5rem 6rem;pointer-events:none;}
+.slide.on{opacity:1;transform:translateX(0) scale(1);pointer-events:auto;}
+.slide.prev{transform:translateX(-40px) scale(.98);}
+.glass{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:1.25rem;box-shadow:0 20px 60px rgba(0,0,0,.35);}
+.dot{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.3);transition:all .3s;border:0;padding:0;cursor:pointer;}
+.dot.on{background:#fff;width:30px;}
+.arrow{width:44px;height:44px;border-radius:9999px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);transition:background .2s;cursor:pointer;color:#fff;}
+.arrow:hover{background:rgba(255,255,255,.2);}
+.bar{height:3px;background:rgba(255,255,255,.2);border-radius:9px;overflow:hidden;}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#818cf8);}
+.bar>i.run{animation:fillBar 3.5s linear forwards;}
+@keyframes fillBar{from{width:0}to{width:100%}}
+
+/* ---- Gateway: fixed 55 / 45 split (framework-free, always visible) ---- */
+#auth-gateway{position:fixed;top:0;left:0;z-index:10;}
+.gw-left,.gw-right{min-width:0;height:100%;}
+.gw-left{width:55%;flex:0 0 55%;position:relative;overflow:hidden;background:linear-gradient(135deg,#060d1f 0%,#0d1b3e 100%);color:#fff;}
+.gw-right{width:45%;flex:0 0 45%;display:flex;flex-direction:column;justify-content:center;padding:2.5rem 3rem;overflow-y:auto;background:#020617;border-left:1px solid rgba(255,255,255,.08);color:#e2e8f0;}
+#glow-a{width:28rem;height:28rem;top:-6rem;left:-5rem;background:#22d3ee;}
+#glow-b{width:26rem;height:26rem;bottom:0;right:0;background:#4f46e5;}
+.gw-gridbg{position:absolute;inset:0;opacity:.06;pointer-events:none;}
+#slides{position:absolute;inset:0;}
+.gw-brand{position:absolute;top:1.9rem;left:2.5rem;z-index:20;display:flex;align-items:center;gap:.75rem;}
+.gw-logo{width:2.3rem;height:2.3rem;border-radius:.8rem;background:linear-gradient(135deg,#22d3ee,#6366f1);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1.25rem;color:#020617;box-shadow:0 8px 24px rgba(34,211,238,.35);}
+.gw-bname{font-weight:800;font-size:1.05rem;letter-spacing:.02em;}
+.gw-btag{font-size:.62rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.32em;margin-top:.15rem;}
+.gw-controls{position:absolute;bottom:1.9rem;left:2.5rem;right:2.5rem;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;}
+.gw-barwrap{flex:1;max-width:20rem;}
+.gw-barwrap .bar{margin-bottom:1rem;}
+.gw-dots{display:flex;align-items:center;justify-content:center;gap:.5rem;}
+
+/* ---- Slide content: crisp white / accent text, icons, feature bullets ---- */
+.sl-icon{font-size:2.7rem;line-height:1;filter:drop-shadow(0 10px 22px rgba(148,163,184,.35));}
+.sl-kicker{font-size:.68rem;font-weight:800;letter-spacing:.26em;margin-top:1.05rem;}
+.sl-title{font-size:clamp(1.55rem,2.3vw,2.35rem);font-weight:800;line-height:1.14;margin-top:.55rem;color:#fff;letter-spacing:-.01em;}
+.sl-desc{color:#cbd5e1;font-size:.92rem;line-height:1.6;margin-top:.75rem;max-width:34rem;}
+.sl-bullets{list-style:none;margin:1.05rem 0 0;padding:0;display:flex;flex-direction:column;gap:.5rem;max-width:34rem;}
+.sl-bullets li{display:flex;align-items:flex-start;gap:.6rem;color:#e2e8f0;font-size:.9rem;font-weight:600;line-height:1.35;}
+.sl-bullets li::before{content:"✓";flex:0 0 auto;font-size:.8rem;font-weight:900;margin-top:.1rem;}
+.sl-card{margin-top:1.4rem;padding:1rem 1.25rem;max-width:30rem;font-size:.85rem;color:#f1f5f9;}
+[data-accent="cyan"] .sl-kicker,[data-accent="cyan"] .sl-bullets li::before{color:#67e8f9;}
+[data-accent="emerald"] .sl-kicker,[data-accent="emerald"] .sl-bullets li::before{color:#6ee7b7;}
+[data-accent="amber"] .sl-kicker,[data-accent="amber"] .sl-bullets li::before{color:#fcd34d;}
+[data-accent="violet"] .sl-kicker,[data-accent="violet"] .sl-bullets li::before{color:#c4b5fd;}
+[data-accent="rose"] .sl-kicker,[data-accent="rose"] .sl-bullets li::before{color:#fda4af;}
+.sc-row{display:flex;justify-content:space-between;align-items:center;gap:.75rem;}
+.sc-k{font-size:.68rem;color:#94a3b8;letter-spacing:.06em;}
+.sc-v{font-weight:700;}
+.sc-live{color:#6ee7b7;font-size:.68rem;font-weight:800;}
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.85rem;text-align:center;}
+.sc-cell{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:.55rem;padding:.45rem .3rem;}
+.sc-cell .sc-k{display:block;margin-bottom:.1rem;}
+.sc-note{margin-top:.8rem;color:#a5f3fc;font-size:.78rem;}
+.sc-line{border-top:1px solid rgba(255,255,255,.22);margin-top:.75rem;padding-top:.75rem;}
+.sc-mini{font-size:.66rem;letter-spacing:.42em;color:#fcd34d;font-weight:800;}
+.sc-big{font-size:3.1rem;font-weight:900;line-height:1.05;margin:.4rem 0;}
+.sc-avatar{width:2.6rem;height:2.6rem;border-radius:9999px;background:rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto;}
+.sc-stack{display:flex;flex-direction:column;gap:.65rem;}
+@media (max-height:680px){.sl-card{display:none !important;}.sl-icon{font-size:2.2rem;}}
+@media (max-height:540px){.sl-desc{display:none;}.sl-bullets{margin-top:.7rem;}.sl-title{font-size:1.45rem;}}
+
+/* ---- Gateway right side: login form + quick demo portals ---- */
+.gw-box{width:100%;max-width:28rem;margin:0 auto;}
+.gw-hd{margin-bottom:2rem;}
+.gw-h1{font-size:1.9rem;font-weight:800;line-height:1.15;}
+.gw-h2{color:#94a3b8;font-size:.88rem;margin-top:.25rem;}
+#login-form>*+*{margin-top:1rem;}
+#gw-right .lbl{color:#cbd5e1;}
+#login-msg{color:#f87171;font-size:.85rem;min-height:1.25rem;margin:0;}
+.gw-submit{width:100%;padding:.75rem .9rem;font-size:1rem;}
+.gw-q{margin-top:2rem;}
+.gw-qhead{font-size:.66rem;text-transform:uppercase;letter-spacing:.24em;color:#64748b;font-weight:800;margin-bottom:.8rem;}
+.gw-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;}
+.gw-portal{text-align:left;border-radius:.9rem;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);padding:1rem;transition:background .2s;color:inherit;cursor:pointer;font:inherit;width:100%;}
+.gw-portal:hover{background:rgba(255,255,255,.12);}
+.gw-portal>div:first-child{font-weight:800;}
+.gw-portal>div:last-child{font-size:.7rem;color:#94a3b8;margin-top:.18rem;}
+.gw-note{font-size:.68rem;color:#64748b;margin-top:1.3rem;line-height:1.65;}
+
+/* ---- Dual OPD token slip (vertical): PATIENT COPY / cut line / ACCOUNTS COPY ---- */
+.tok-wrap{display:flex;flex-direction:column;gap:16px;width:100%;}
+.tok-slip{width:100%;padding:16px 20px 14px;display:flex;flex-direction:column;border:2px solid #1e293b;border-radius:10px;background:#fff;color:#0f172a;}
+.tok-head{text-align:center;border-bottom:2px solid #1e293b;padding-bottom:7px;}
+.tok-hname{font-weight:800;font-size:16px;}
+.tok-hlabel{font-size:10px;font-weight:800;letter-spacing:.22em;margin-top:4px;color:#334155;}
+.tok-time{text-align:center;font-size:11px;color:#64748b;margin:7px 0 0;}
+.tok-box{text-align:center;margin:10px 0;border:2px solid #1e293b;border-radius:10px;padding:10px 8px 11px;}
+.tok-boxlbl{font-size:9px;text-transform:uppercase;letter-spacing:.3em;color:#64748b;font-weight:700;}
+.tok-num{font-size:44px;font-weight:900;line-height:1.05;margin-top:3px;letter-spacing:.02em;}
+.tok-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tok-tbl td{padding:3.5px 2px;}
+.tok-tbl td:first-child{color:#64748b;width:112px;}
+.tok-tbl td:last-child{font-weight:700;}
+.tok-foot{padding-top:10px;}
+.tok-note{font-size:9.5px;color:#475569;text-align:center;border-top:1px solid #cbd5e1;padding-top:7px;}
+.tok-sign{margin-top:16px;border-top:1px solid #334155;padding-top:4px;width:75%;margin-left:auto;margin-right:auto;font-size:9.5px;color:#475569;text-align:center;}
+.tok-cut{border-top:2px dashed #64748b;text-align:center;color:#64748b;font-size:11px;letter-spacing:.2em;padding-top:6px;}
+
+/* ---- App ---- */
+.nav-btn{display:block;width:100%;text-align:left;padding:.6rem .9rem;border-radius:.5rem;color:#cbd5e1;font-size:.9rem;transition:background .2s;background:transparent;border:0;cursor:pointer;font:inherit;color:#cbd5e1;}
+.nav-btn:hover{background:#1e293b;color:#fff;}
+.nav-btn.active{background:#2563eb;color:#fff;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.25rem;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b;padding:.6rem .75rem;background:#f8fafc;border-bottom:1px solid #e2e8f0;white-space:nowrap;}
+.td{padding:.6rem .75rem;border-bottom:1px solid #f1f5f9;font-size:.875rem;vertical-align:middle;}
+.inp{width:100%;border:1px solid #cbd5e1;border-radius:.5rem;padding:.5rem .7rem;font-size:.875rem;background:#fff;color:#0f172a;outline:none;}
+.inp:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+.lbl{display:block;font-size:.75rem;font-weight:600;color:#64748b;margin-bottom:.25rem;}
+.btn{padding:.5rem .9rem;border-radius:.5rem;font-size:.85rem;font-weight:600;transition:filter .2s;cursor:pointer;white-space:nowrap;border:0;}
+.btn:hover{filter:brightness(1.08);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-p{background:#2563eb;color:#fff;}
+.btn-s{background:#059669;color:#fff;}
+.btn-d{background:#dc2626;color:#fff;}
+.btn-g{background:#e2e8f0;color:#0f172a;}
+.badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-size:.7rem;font-weight:700;white-space:nowrap;}
+.b-red{background:#fee2e2;color:#b91c1c;}
+.b-amb{background:#fef3c7;color:#b45309;}
+.b-grn{background:#dcfce7;color:#15803d;}
+.b-blue{background:#dbeafe;color:#1d4ed8;}
+.b-gray{background:#e2e8f0;color:#334155;}
+@keyframes pulseSoft{0%,100%{opacity:1}50%{opacity:.55}}
+.pulse{animation:pulseSoft 1.6s infinite;}
+@page{size:A4;margin:10mm;}
+@media print{
+  html,body{height:auto !important;overflow:visible !important;background:#fff !important;}
+  body>*:not(#print-modal){display:none !important;}
+  #print-modal{position:static !important;display:block !important;background:none !important;padding:0 !important;}
+  #print-modal .no-print{display:none !important;}
+  #print-modal .print-sheet{box-shadow:none !important;max-height:none !important;overflow:visible !important;margin:0 !important;border-radius:0 !important;}
+  #print-body{padding:0 !important;}
+  /* Full-page 50/50 dual OPD token voucher — fills ONE A4 sheet, cut line at the exact 50% vertical center */
+  .tok-wrap{height:96vh;margin-top:2vh;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;gap:0 !important;}
+  .tok-slip{height:46%;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;padding:18px 24px !important;border-radius:8px !important;}
+  .tok-head{padding-bottom:6px !important;}
+  .tok-hname{font-size:16px !important;}
+  .tok-hlabel{font-size:11px !important;margin-top:4px !important;letter-spacing:.26em !important;}
+  .tok-time{font-size:11px !important;margin:6px 0 0 !important;}
+  .tok-box{margin:8px 0 !important;padding:12px 8px 14px !important;border-radius:10px !important;}
+  .tok-boxlbl{font-size:10px !important;letter-spacing:.3em !important;}
+  .tok-num{font-size:46px !important;margin-top:4px !important;}
+  .tok-tbl{font-size:12.5px !important;}
+  .tok-tbl td{padding:4px 2px !important;}
+  .tok-foot{padding-top:8px !important;}
+  .tok-note{font-size:10px !important;padding-top:6px !important;}
+  .tok-sign{font-size:10px !important;margin-top:26px !important;padding-top:4px !important;}
+  .tok-cut{font-size:11px !important;padding:6px 0 !important;}
+}
+
+</style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased">
+
+<!-- ================= AUTH GATEWAY ================= -->
+<div id="auth-gateway" class="fixed inset-0 z-10 text-white" style="width:100vw;height:100vh;display:flex;overflow:hidden;background:#060d1f;">
+
+  <!-- LEFT (55%): 5-slide interactive clinical showcase -->
+  <section id="gw-left" class="gw-left">
+    <div id="glow-a" class="gw-glow"></div>
+    <div id="glow-b" class="gw-glow"></div>
+    <div class="gw-gridbg" style="background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:44px 44px;"></div>
+
+    <div class="gw-brand">
+      <div class="gw-logo">+</div>
+      <div><div class="gw-bname">MedCore AI</div><div class="gw-btag">Healthcare OS</div></div>
+    </div>
+
+    <div id="slides">
+      <!-- 1 -->
+      <div class="slide on" data-accent="cyan">
+        <div class="sl-icon">🩺</div>
+        <div class="sl-kicker">01 · AI-POWERED CLINICAL COMMAND</div>
+        <h2 class="sl-title">Real-time OPD queues.<br>Instant clinical insight.</h2>
+        <p class="sl-desc">Command every consultation from one clinical workspace — queue flow, live vitals and decision support together.</p>
+        <ul class="sl-bullets">
+          <li>Real-time OPD queue management</li>
+          <li>Vitals tracking for every patient</li>
+          <li>Instant differential diagnosis support</li>
+        </ul>
+        <div class="glass sl-card">
+          <div class="sc-row"><span class="sc-k">Active consult · Cabin 1</span><span class="sc-live">● LIVE</span></div>
+          <div class="sc-v" style="font-size:1.05rem;margin-top:.4rem;">Ahmed Raza · T-101</div>
+          <div class="sc-grid">
+            <div class="sc-cell"><span class="sc-k">BP</span><span class="sc-v">130/85</span></div>
+            <div class="sc-cell"><span class="sc-k">Temp</span><span class="sc-v">101.2°F</span></div>
+            <div class="sc-cell"><span class="sc-k">SpO₂</span><span class="sc-v">97%</span></div>
+          </div>
+          <div class="sc-note">AI suggests: Influenza · Viral URTI · Dengue (rule-out)</div>
+        </div>
+      </div>
+      <!-- 2 -->
+      <div class="slide" data-accent="emerald">
+        <div class="sl-icon">💊</div>
+        <div class="sl-kicker">02 · SMART PHARMACY POS &amp; INVENTORY</div>
+        <h2 class="sl-title">Expiry-locked billing.<br>Live stock deduction.</h2>
+        <p class="sl-desc">Sell with confidence — expired batches are blocked at the counter and inventory keeps itself in sync on every sale.</p>
+        <ul class="sl-bullets">
+          <li>Expiry-lock protection at the counter</li>
+          <li>Live stock deduction on every sale</li>
+          <li>Dual-copy billing receipts</li>
+        </ul>
+        <div class="glass sl-card">
+          <div class="sc-row"><span>Amoxicillin 500mg × 2</span><span class="sc-v">Rs. 170</span></div>
+          <div class="sc-row" style="margin-top:.45rem;"><span>Paracetamol 500mg × 4</span><span class="sc-v">Rs. 48</span></div>
+          <div class="sc-row" style="margin-top:.45rem;color:#6ee7b7;"><span>Discount 5%</span><span>- Rs. 11</span></div>
+          <div class="sc-row sc-line"><span class="sc-v">Net Total</span><span class="sc-v">Rs. 207</span></div>
+          <div style="margin-top:.6rem;"><span class="badge b-red">Omeprazole 20mg · EXPIRED · Locked</span></div>
+        </div>
+      </div>
+      <!-- 3 -->
+      <div class="slide" data-accent="amber">
+        <div class="sl-icon">📺</div>
+        <div class="sl-kicker">03 · LIVE WAITING ROOM LED DISPLAY</div>
+        <h2 class="sl-title">Synchronized token calls.<br>Routed to the right cabin.</h2>
+        <p class="sl-desc">Every call updates the waiting-room screen with an audible chime, so patients always know where to go next.</p>
+        <ul class="sl-bullets">
+          <li>Synchronized token calling</li>
+          <li>Audio chime on every call</li>
+          <li>Cabin routing on the LED display</li>
+        </ul>
+        <div class="glass sl-card" style="text-align:center;">
+          <div class="sc-mini">NOW SERVING</div>
+          <div class="sc-big pulse">T-102</div>
+          <div style="color:#e2e8f0;font-size:.82rem;">Usman Tariq → Cabin 2 · Dr. Omar Siddiqui</div>
+        </div>
+      </div>
+      <!-- 4 -->
+      <div class="slide" data-accent="violet">
+        <div class="sl-icon">🙋</div>
+        <div class="sl-kicker">04 · ISOLATED PATIENT HEALTH PORTAL</div>
+        <h2 class="sl-title">Private access by MRN.<br>Your records, nobody else's.</h2>
+        <p class="sl-desc">Patients see only their own tokens, prescriptions and billing history, protected by a personal portal PIN.</p>
+        <ul class="sl-bullets">
+          <li>Private MRN-based access</li>
+          <li>Personal tokens &amp; prescriptions</li>
+          <li>Isolated billing history</li>
+        </ul>
+        <div class="glass sl-card">
+          <div style="display:flex;align-items:center;gap:.75rem;">
+            <div class="sc-avatar">A</div>
+            <div><div class="sc-v">Ahmed Raza</div><div class="sc-k">MRN P-101 · Portal PIN ••••</div></div>
+          </div>
+          <div class="sc-grid">
+            <div class="sc-cell"><span class="sc-k">Token</span><span class="sc-v">T-101</span></div>
+            <div class="sc-cell"><span class="sc-k">Rx</span><span class="sc-v">1 issued</span></div>
+            <div class="sc-cell"><span class="sc-k">Bills</span><span class="sc-v">Rs. 500</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- 5 -->
+      <div class="slide" data-accent="rose">
+        <div class="sl-icon">🛡️</div>
+        <div class="sl-kicker">05 · ENTERPRISE ZERO-TRUST SECURITY</div>
+        <h2 class="sl-title">Role-based access.<br>Every action audited.</h2>
+        <p class="sl-desc">Strict role isolation, anti-copy and developer-tool locks, and a real-time security audit trail for compliance.</p>
+        <ul class="sl-bullets">
+          <li>Role-based access control</li>
+          <li>Anti-copy &amp; DevTools protection</li>
+          <li>Real-time security audit logging</li>
+        </ul>
+        <div class="glass sl-card sc-stack">
+          <div class="sc-row"><span>Role isolation (CEO · Doctor · Reception · Patient)</span><span class="badge b-grn">ENFORCED</span></div>
+          <div class="sc-row"><span>Right-click &amp; DevTools shortcuts</span><span class="badge b-red">BLOCKED</span></div>
+          <div class="sc-row"><span>Security events logged</span><span class="badge b-blue">REAL-TIME</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls: prev/next, progress bar, 5 clickable dots -->
+    <div class="gw-controls">
+      <button class="arrow" data-act="slide-prev" aria-label="Previous slide">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="gw-barwrap">
+        <div class="bar"><i id="slide-bar"></i></div>
+        <div id="dots" class="gw-dots">
+          <button class="dot on" data-act="slide" data-i="0" aria-label="Slide 1"></button>
+          <button class="dot" data-act="slide" data-i="1" aria-label="Slide 2"></button>
+          <button class="dot" data-act="slide" data-i="2" aria-label="Slide 3"></button>
+          <button class="dot" data-act="slide" data-i="3" aria-label="Slide 4"></button>
+          <button class="dot" data-act="slide" data-i="4" aria-label="Slide 5"></button>
+        </div>
+      </div>
+      <button class="arrow" data-act="slide-next" aria-label="Next slide">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- RIGHT (45%): login card + quick demo portals -->
+  <section id="gw-right" class="gw-right">
+    <div class="gw-box">
+      <div class="gw-hd">
+        <div class="gw-h1">MedCore AI</div>
+        <div class="gw-h2">Enterprise Healthcare &amp; Pharmacy OS</div>
+      </div>
+      <form id="login-form" data-form="login">
+        <div>
+          <label class="lbl" for="login-id">Email or Patient ID</label>
+          <input id="login-id" class="inp" autocomplete="username" required placeholder="ceo@medcore.ai or P-101">
+        </div>
+        <div>
+          <label class="lbl" for="login-pw">Password / Portal PIN</label>
+          <input id="login-pw" type="password" class="inp" autocomplete="current-password" required>
+        </div>
+        <p id="login-msg"></p>
+        <button class="btn btn-p gw-submit">Secure Sign In</button>
+      </form>
+
+      <div class="gw-q">
+        <p class="gw-qhead">Quick Demo Portals</p>
+        <div class="gw-grid">
+          <button data-act="quick" data-role="ceo" class="gw-portal">
+            <div>👑 CEO</div><div>Command Center</div></button>
+          <button data-act="quick" data-role="doctor" class="gw-portal">
+            <div>🩺 Doctor</div><div>Clinical Portal</div></button>
+          <button data-act="quick" data-role="reception" class="gw-portal">
+            <div>🧾 Reception</div><div>Front Desk &amp; POS</div></button>
+          <button data-act="quick" data-role="patient" class="gw-portal">
+            <div>🙋 Patient</div><div>Health Portal (P-101)</div></button>
+        </div>
+        <p class="gw-note">Demo credentials: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="47242228072a22232428352269262e">[email&#160;protected]</a> / admin123 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1e7a717d6a716c5e737b7a7d716c7b307f77">[email&#160;protected]</a> / doc123 · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e59691848383a5888081868a9780cb848c">[email&#160;protected]</a> / staff123 · P-101…P-106 / PIN 1234</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app-shell" class="hidden h-screen w-screen overflow-hidden bg-slate-100 no-select">
+  <aside class="w-64 shrink-0 bg-slate-900 text-slate-200 flex flex-col">
+    <div class="p-5 border-b border-slate-800">
+      <div class="font-extrabold text-white text-lg">MedCore AI</div>
+      <div id="sb-sub" class="text-xs text-slate-400 mt-0.5"></div>
+    </div>
+    <nav id="sb-nav" class="flex-1 overflow-y-auto p-3 space-y-1"></nav>
+    <div id="sb-user" class="p-4 border-t border-slate-800 text-xs text-slate-400"></div>
+  </aside>
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="h-16 shrink-0 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+      <div class="min-w-0">
+        <h1 id="view-title" class="text-lg font-bold truncate"></h1>
+        <p id="view-sub" class="text-xs text-slate-500 truncate"></p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="storage-mode" class="hidden md:inline text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded"></span>
+        <button data-act="live" title="Live OPD Screen" class="btn btn-g px-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </button>
+        <button data-act="logout" class="btn btn-d">Logout</button>
+      </div>
+    </header>
+    <main id="view-root" class="flex-1 overflow-y-auto p-6 min-h-0"></main>
+  </div>
+</div>
+
+<!-- ================= MODALS (all hidden on load) ================= -->
+<div id="live-opd-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-950 text-white">
+  <div id="live-body" class="w-full h-full flex flex-col"></div>
+</div>
+
+<div id="audit-log-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-900/70 items-center justify-center p-4">
+  <div class="bg-white text-slate-800 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="font-bold">🛡️ Security Audit Log</h3>
+      <button class="btn btn-g" data-act="close-modal" data-m="audit-log-modal">✕ Close</button>
+    </div>
+    <div id="audit-body" class="p-4"></div>
+  </div>
+</div>
+
+<div id="add-medicine-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-900/70 items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="font-bold">Add New Medicine</h3>
+      <button class="btn btn-g" data-act="close-modal" data-m="add-medicine-modal">✕</button>
+    </div>
+    <form data-form="med" class="p-5 grid grid-cols-2 gap-3">
+      <div class="col-span-2"><label class="lbl">Medicine name</label><input name="mname" class="inp" required placeholder="e.g. Azithromycin 500mg"></div>
+      <div><label class="lbl">Category</label><input name="mcat" class="inp" required value="General"></div>
+      <div><label class="lbl">Unit price (Rs.)</label><input name="mprice" type="number" min="1" class="inp" required value="20"></div>
+      <div><label class="lbl">Opening stock</label><input name="mstock" type="number" min="0" class="inp" required value="100"></div>
+      <div><label class="lbl">Reorder level</label><input name="mmin" type="number" min="0" class="inp" required value="20"></div>
+      <div class="col-span-2"><label class="lbl">Expiry date</label><input name="mexp" type="date" class="inp" required></div>
+      <div class="col-span-2 flex justify-end gap-2 pt-2">
+        <button type="button" class="btn btn-g" data-act="close-modal" data-m="add-medicine-modal">Cancel</button>
+        <button class="btn btn-p">Save Medicine</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="restock-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-900/70 items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="font-bold">Restock Medicine</h3>
+      <button class="btn btn-g" data-act="close-modal" data-m="restock-modal">✕</button>
+    </div>
+    <form data-form="restock" class="p-5 space-y-3">
+      <div><label class="lbl">Medicine</label><select id="restock-med" name="rmed" class="inp" required></select></div>
+      <div><label class="lbl">Quantity received</label><input name="rqty" type="number" min="1" class="inp" required value="50"></div>
+      <div><label class="lbl">New expiry date (optional)</label><input name="rexp" type="date" class="inp"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="btn btn-g" data-act="close-modal" data-m="restock-modal">Cancel</button>
+        <button class="btn btn-s">Confirm Restock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="add-doctor-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-900/70 items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 class="font-bold">Add New Doctor</h3>
+      <button class="btn btn-g" data-act="close-modal" data-m="add-doctor-modal">✕</button>
+    </div>
+    <form data-form="doc" class="p-5 grid grid-cols-2 gap-3">
+      <div class="col-span-2"><label class="lbl">Full name</label><input name="dname" class="inp" required placeholder="Dr. Full Name"></div>
+      <div><label class="lbl">Department</label><input name="dept" class="inp" required placeholder="e.g. Neurology"></div>
+      <div><label class="lbl">Cabin</label><input name="cabin" class="inp" required value="Cabin 5"></div>
+      <div><label class="lbl">Consultation fee (Rs.)</label><input name="dfee" type="number" min="0" class="inp" required value="600"></div>
+      <div><label class="lbl">Shift</label><select name="shift" class="inp"><option>Morning</option><option>Evening</option><option>Night</option></select></div>
+      <div class="col-span-2 flex justify-end gap-2 pt-2">
+        <button type="button" class="btn btn-g" data-act="close-modal" data-m="add-doctor-modal">Cancel</button>
+        <button class="btn btn-p">Save Doctor</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="rx-modal" class="modal hidden fixed inset-0 z-[900] bg-slate-900/70 items-center justify-center p-4">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
+    <div class="flex justify-between items-center p-4 border-b">
+      <h3 id="rx-title" class="font-bold">Vitals & Prescription</h3>
+      <button class="btn btn-g" data-act="close-modal" data-m="rx-modal">✕</button>
+    </div>
+    <form data-form="rx" class="p-5 space-y-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div><label class="lbl">BP (mmHg)</label><input name="bp" class="inp" required value="120/80"></div>
+        <div><label class="lbl">Temp (°F)</label><input name="temp" type="number" step="0.1" class="inp" required value="98.6"></div>
+        <div><label class="lbl">Pulse (bpm)</label><input name="pulse" type="number" class="inp" required value="78"></div>
+        <div><label class="lbl">SpO₂ (%)</label><input name="spo2" type="number" class="inp" required value="98"></div>
+        <div><label class="lbl">Weight (kg)</label><input name="weight" type="number" step="0.1" class="inp" required value="70"></div>
+      </div>
+      <div><label class="lbl">Symptoms</label><input name="symptoms" class="inp" placeholder="fever, cough, body ache"></div>
+      <div><label class="lbl">Diagnosis</label><input name="diagnosis" class="inp" required placeholder="Provisional diagnosis"></div>
+      <div>
+        <label class="lbl">Medicines (one per line: Name | Dose | Frequency | Duration)</label>
+        <textarea name="meds" rows="4" class="inp" required placeholder="Paracetamol 500mg | 1 tab | 1-1-1 | 3 days"></textarea>
+      </div>
+      <div><label class="lbl">Advice / notes</label><textarea name="notes" rows="2" class="inp"></textarea></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="btn btn-g" data-act="close-modal" data-m="rx-modal">Cancel</button>
+        <button class="btn btn-s">Save & Print Rx</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="print-modal" class="modal hidden fixed inset-0 z-[950] bg-slate-900/70 items-start justify-center p-4 overflow-y-auto">
+  <div class="print-sheet bg-white rounded-xl shadow-2xl w-full max-w-5xl my-4 max-h-[92vh] overflow-y-auto">
+    <div class="no-print flex justify-between items-center p-3 border-b">
+      <span class="font-bold text-sm">Print Preview</span>
+      <div class="flex gap-2">
+        <button class="btn btn-p" data-act="print">🖨️ Print</button>
+        <button class="btn btn-g" data-act="close-print">✕ Close</button>
+      </div>
+    </div>
+    <div id="print-body" class="p-6 text-slate-900"></div>
+  </div>
+</div>
+
+<div id="toast-root" class="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+'use strict';
+
+/* ================= CORE HELPERS ================= */
+const SCHEMA = 1;
+const DB_KEY = 'medcore_enterprise_v1';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => 'Rs. ' + Math.round(Number(n) || 0).toLocaleString('en-IN');
+const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+const todayStr = () => iso(new Date());
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+const daysUntil = s => Math.round((new Date(s + 'T00:00:00') - new Date(todayStr() + 'T00:00:00')) / 86400000);
+const nowStr = () => new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+const nxt = (arr, key, start) => { const nums = arr.map(x => parseInt(String(x[key]).replace(/\D/g, ''), 10) || 0); return Math.max(start - 1, ...nums) + 1; };
+const tokSeq = q => parseInt(String(q.token).replace(/\D/g, ''), 10) || 0;
+const pOf = id => DB.patients.find(p => p.id === id);
+const dOf = id => DB.doctors.find(d => d.id === id);
+const medOf = id => DB.medicines.find(m => m.id === id);
+const pName = id => (pOf(id) ? pOf(id).name : id);
+const dName = id => (dOf(id) ? dOf(id).name : '—');
+const cabinOf = id => (dOf(id) ? dOf(id).cabin : '—');
+const todayQ = () => DB.queue.filter(q => q.date === todayStr());
+const kpi = (l, v, c = 'text-slate-900') => `<div class="card"><div class="text-xs font-semibold uppercase tracking-wide text-slate-500">${l}</div><div class="text-2xl font-extrabold mt-1 ${c}">${v}</div></div>`;
+const statusLabel = s => ({ waiting: 'Waiting', serving: 'Being Served', done: 'Completed' }[s] || s);
+const stockBadge = m => {
+  if (daysUntil(m.expiry) < 0) return '<span class="badge b-red">Expired</span>';
+  if (m.stock <= m.min) return '<span class="badge b-red">Low Stock</span>';
+  if (daysUntil(m.expiry) < 90) return '<span class="badge b-amb">Expiring Soon</span>';
+  return '<span class="badge b-grn">In Stock</span>';
+};
+const myTok = () => DB.queue.filter(q => q.pid === session.pid && q.date === todayStr()).sort((a, b) => tokSeq(b) - tokSeq(a))[0] || null;
+const myRx = () => DB.rx.filter(r => r.pid === session.pid).slice().reverse();
+const myBills = () => DB.bills.filter(b => b.pid === session.pid).slice().reverse();
+const latestRx = pid => DB.rx.filter(r => r.pid === pid).slice(-1)[0] || null;
+const activeTok = () => DB.queue.find(q => q.did === session.did && q.status === 'serving' && q.date === todayStr()) || null;
+const vitalsGrid = v => `<div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3">
+  ${[['BP', v.bp + ' mmHg'], ['Temp', v.temp + ' °F'], ['Pulse', v.pulse + ' bpm'], ['SpO₂', v.spo2 + ' %'], ['Weight', v.weight + ' kg']]
+    .map(([l, x]) => `<div class="bg-slate-50 rounded-lg p-3"><div class="text-xs text-slate-500">${l}</div><div class="font-bold">${esc(x)}</div></div>`).join('')}</div>`;
+
+/* ================= STORAGE (IndexedDB mirror + localStorage fallback) ================= */
+const Store = {
+  mode: 'localStorage',
+  idb: null,
+  init() {
+    try {
+      if (!window.indexedDB) throw new Error('IndexedDB unavailable');
+      const req = indexedDB.open('medcore_db', 1);
+      req.onupgradeneeded = () => { try { req.result.createObjectStore('kv'); } catch (e) {} };
+      req.onsuccess = () => { this.idb = req.result; this.mode = 'IndexedDB + localStorage'; this.write(DB); };
+      req.onerror = () => { this.idb = null; this.mode = 'localStorage (fallback)'; };
+    } catch (e) { this.idb = null; this.mode = 'localStorage (fallback)'; }
+  },
+  write(obj) {
+    const s = JSON.stringify(obj);
+    try { localStorage.setItem(DB_KEY, s); } catch (e) { this.mode = 'memory (storage blocked)'; }
+    if (this.idb) {
+      try {
+        const tx = this.idb.transaction('kv', 'readwrite');
+        tx.objectStore('kv').put(s, DB_KEY);
+        tx.onerror = () => { this.idb = null; this.mode = 'localStorage (fallback)'; };
+      } catch (e) { this.idb = null; this.mode = 'localStorage (fallback)'; }
+    }
+  },
+  read() { try { const s = localStorage.getItem(DB_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+};
+
+function save() {
+  Store.write(DB);
+  const lm = $('#live-opd-modal');
+  if (lm && !lm.classList.contains('hidden')) renderLive();
+  const sm = $('#storage-mode');
+  if (sm) sm.textContent = 'Storage: ' + Store.mode;
+}
+
+function audit(action, type = 'INFO') {
+  DB.audit.unshift({ t: nowStr(), user: session ? session.name : 'Guest / Unauthenticated', action, type });
+  if (DB.audit.length > 300) DB.audit.length = 300;
+  save();
+}
+
+/* ================= UI CONTROLLER ================= */
+function toast(msg, kind = 'info') {
+  const cls = { info: 'bg-slate-800', ok: 'bg-emerald-600', warn: 'bg-amber-500', danger: 'bg-red-600' }[kind] || 'bg-slate-800';
+  const el = document.createElement('div');
+  el.className = `${cls} text-white px-4 py-3 rounded-lg shadow-xl text-sm max-w-sm transition-opacity duration-500`;
+  el.textContent = msg;
+  $('#toast-root').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 500); }, 3500);
+}
+
+function secAlert(label, msg) {
+  toast(msg, 'danger');
+  audit('Blocked ' + label + ' attempt', 'SECURITY');
+}
+
+function toggleModal(id, open) {
+  const m = document.getElementById(id);
+  if (!m) return;
+  const show = (typeof open === 'boolean') ? open : m.classList.contains('hidden');
+  m.classList.toggle('hidden', !show);
+  m.classList.toggle('flex', show);
+}
+
+function openPrint(html) {
+  $('#print-body').innerHTML = html;
+  toggleModal('print-modal', true);
+}
+
+/* ---- 5-slide showcase: auto-advance 3.5s, dots, prev/next ---- */
+const GLOW = ['#22d3ee', '#34d399', '#fbbf24', '#a78bfa', '#fb7185'];
+const GLOW2 = ['#4f46e5', '#0d9488', '#d97706', '#7c3aed', '#be123c'];
+let slideIdx = 0, slideTimer = null;
+function showSlide(i) {
+  const sl = $$('#slides .slide'), dots = $$('#dots .dot');
+  if (!sl.length) return;
+  const n = sl.length;
+  const next = ((i % n) + n) % n;
+  sl.forEach((s, k) => { s.classList.toggle('on', k === next); s.classList.toggle('prev', k < next); });
+  dots.forEach((d, k) => d.classList.toggle('on', k === next));
+  const ga = $('#glow-a'), gb = $('#glow-b');
+  if (ga) ga.style.background = GLOW[next];
+  if (gb) gb.style.background = GLOW2[next];
+  const bar = $('#slide-bar');
+  if (bar) { bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run'); }
+  slideIdx = next;
+}
+function startSlides() {
+  stopSlides();
+  showSlide(slideIdx);
+  slideTimer = setInterval(() => showSlide(slideIdx + 1), 3500);
+}
+function stopSlides() { clearInterval(slideTimer); slideTimer = null; }
+
+function chime() {
+  try {
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return;
+    const ctx = new C();
+    [880, 1175, 1568].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = f; o.connect(g); g.connect(ctx.destination);
+      const t = ctx.currentTime + i * 0.35;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.start(t); o.stop(t + 0.95);
+    });
+  } catch (e) {}
+}
+
+/* ================= SECURITY LOCK ================= */
+document.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  secAlert('Right-click', 'Security Alert: Right-click is disabled to protect confidential patient records.');
+});
+document.addEventListener('keydown', e => {
+  const k = (e.key || '').toLowerCase();
+  let combo = null;
+  if (e.key === 'F12') combo = 'F12';
+  else if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(k)) combo = 'Ctrl+Shift+' + k.toUpperCase();
+  else if (e.ctrlKey && !e.shiftKey && !e.altKey && ['u', 's'].includes(k)) combo = 'Ctrl+' + k.toUpperCase();
+  if (combo) {
+    e.preventDefault(); e.stopPropagation();
+    secAlert(combo, `Security Alert: ${combo} is disabled to protect confidential patient records.`);
+  } else if (e.key === 'Escape') {
+    $$('.modal').forEach(m => toggleModal(m.id, false));
+  }
+}, true);
+
+/* ================= AUTH ================= */
+const ACCOUNTS = {
+  'ceo@medcore.ai': { pw: 'admin123', role: 'ceo', name: 'Dr. Imran Qureshi (CEO)' },
+  'doctor@medcore.ai': { pw: 'doc123', role: 'doctor', name: 'Dr. Ayesha Khan', did: 'D-01' },
+  'staff@medcore.ai': { pw: 'staff123', role: 'staff', name: 'Zainab Malik (Reception & Pharmacy)' }
+};
+const ROLE_LABEL = { ceo: 'CEO Command Center', doctor: 'Doctor Clinical Portal', staff: 'Reception & Pharmacy POS', patient: 'Patient Health Portal' };
+const DEFAULT_VIEW = { ceo: 'ceo-dash', doctor: 'doc-queue', staff: 'pos', patient: 'p-dash' };
+
+let session = null;
+const S = { view: null, cart: [], discount: 0, posPatient: '', search: {}, lastReg: null, lastToken: null };
+const CHARTS = {};
+
+function login(id, pw) {
+  id = (id || '').trim(); pw = (pw || '').trim();
+  const msg = $('#login-msg'); msg.textContent = '';
+  const acc = ACCOUNTS[id.toLowerCase()];
+  if (acc && acc.pw === pw) return startSession({ role: acc.role, name: acc.name, did: acc.did || null });
+  if (/^p-\d{3}$/i.test(id)) {
+    const p = DB.patients.find(x => x.id.toLowerCase() === id.toLowerCase());
+    if (p && p.pin === pw) return startSession({ role: 'patient', name: p.name, pid: p.id });
+  }
+  msg.textContent = 'Invalid credentials. Verify your email / Patient ID and password / PIN.';
+  audit('Failed login attempt for "' + id.slice(0, 40) + '"', 'WARN');
+  toast('Access denied: invalid credentials', 'danger');
+}
+
+function quick(role) {
+  const map = {
+    ceo: ['ceo@medcore.ai', 'admin123'],
+    doctor: ['doctor@medcore.ai', 'doc123'],
+    reception: ['staff@medcore.ai', 'staff123'],
+    patient: ['P-101', '1234']
+  };
+  const [u, p] = map[role];
+  $('#login-id').value = u; $('#login-pw').value = p;
+  login(u, p);
+}
+
+function startSession(s) {
+  session = s;
+  S.view = null; S.cart = []; S.discount = 0;
+  stopSlides();
+  $('#login-pw').value = ''; $('#login-msg').textContent = '';
+  audit('Login: ' + s.name + ' (' + s.role + ')');
+  const g = $('#auth-gateway');
+  g.classList.add('hidden'); g.classList.remove('grid');
+  const sh = $('#app-shell');
+  sh.classList.remove('hidden'); sh.classList.add('flex');
+  $('#sb-sub').textContent = ROLE_LABEL[s.role];
+  $('#sb-user').innerHTML = `Signed in as<br><b class="text-slate-200">${esc(s.name)}</b>`;
+  buildNav();
+  showView(DEFAULT_VIEW[s.role]);
+  toast('Welcome, ' + s.name, 'ok');
+}
+
+function logout() {
+  audit('Logout: ' + (session ? session.name : ''));
+  destroyCharts();
+  session = null; S.view = null;
+  $$('.modal').forEach(m => toggleModal(m.id, false));
+  const sh = $('#app-shell');
+  sh.classList.add('hidden'); sh.classList.remove('flex');
+  const g = $('#auth-gateway');
+  g.classList.remove('hidden'); g.classList.add('grid');
+  $('#view-root').innerHTML = '';
+  $('#login-id').value = ''; $('#login-pw').value = '';
+  startSlides();
+}
+
+/* ================= NAVIGATION & VIEW CONTROLLER ================= */
+const ROLE_NAV = {
+  ceo: [
+    { v: 'ceo-dash', l: 'Executive Dashboard', i: '📊' },
+    { v: 'ceo-doctors', l: 'Doctors Directory', i: '🩺' },
+    { v: 'ceo-patients', l: 'Patients Directory', i: '👥' },
+    { v: 'ceo-pharmacy', l: 'Pharmacy Audit', i: '💊' },
+    { v: 'ceo-staff', l: 'Staff Management', i: '🧑‍💼' },
+    { act: 'audit', l: 'Security Audit Log', i: '🛡️' }
+  ],
+  doctor: [
+    { v: 'doc-queue', l: 'My Patient Queue', i: '🧑‍⚕️' },
+    { v: 'doc-ai', l: 'AI Clinical Assistant', i: '🤖' },
+    { v: 'doc-records', l: 'Patient Records & Rx', i: '📁' }
+  ],
+  staff: [
+    { v: 'pos', l: 'Pharmacy POS', i: '🛒' },
+    { v: 'register', l: 'Register Patient', i: '📝' },
+    { v: 'token', l: 'Issue OPD Token', i: '🎫' },
+    { v: 'inventory', l: 'Inventory', i: '📦' },
+    { v: 'patdir', l: 'Patient Directory', i: '👥' }
+  ],
+  patient: [
+    { v: 'p-dash', l: 'My Dashboard', i: '🏠' },
+    { v: 'p-token', l: 'My Queue Token', i: '🎫' },
+    { v: 'p-vitals', l: 'My Vitals', i: '❤️' },
+    { v: 'p-rx', l: 'My Prescriptions', i: '💊' },
+    { v: 'p-bills', l: 'My Bills & Receipts', i: '🧾' }
+  ]
+};
+
+const navHTML = it => it.act
+  ? `<button class="nav-btn" data-act="${it.act}">${it.i} ${esc(it.l)}</button>`
+  : `<button class="nav-btn" data-act="view" data-v="${it.v}" data-nav="${it.v}">${it.i} ${esc(it.l)}</button>`;
+
+function buildNav() {
+  $('#sb-nav').innerHTML = ROLE_NAV[session.role].map(navHTML).join('') + navHTML({ act: 'live', l: 'Live OPD Screen', i: '📺' });
+}
+
+const RENDER = {
+  'ceo-dash': { t: 'Executive Command Center', s: 'Hospital-wide KPIs, OPD trends and department revenue', f: renderCEO },
+  'ceo-doctors': { t: 'Doctors Directory', s: 'Consultants, departments, cabins and fees', f: renderCEODoctors },
+  'ceo-patients': { t: 'Patients Directory', s: 'All registered patients (read-only)', f: renderPatientDir },
+  'ceo-pharmacy': { t: 'Pharmacy Audit', s: 'Dispensing and pharmacy revenue ledger', f: renderCEOPharm },
+  'ceo-staff': { t: 'Staff Management', s: 'Roster, shifts and availability', f: renderStaff },
+  'doc-queue': { t: 'My Patient Queue', s: 'Active consult, waiting list and clinical actions', f: renderDocQueue },
+  'doc-ai': { t: 'AI Clinical Assistant', s: 'Symptom-based differential diagnosis (decision support)', f: renderDocAI },
+  'doc-records': { t: 'Patient Records & My Prescriptions', s: 'Search patient records and reprint prescriptions', f: renderDocRecords },
+  'pos': { t: 'Pharmacy POS', s: 'Medicine catalogue and billing cart', f: renderPOS },
+  'register': { t: 'Register Patient', s: 'Create a permanent patient record with portal PIN', f: renderRegister },
+  'token': { t: 'Issue OPD Token', s: 'Generate queue token and OPD fee receipt', f: renderToken },
+  'inventory': { t: 'Inventory', s: 'Stock levels, reorder and expiry monitoring', f: renderInventory },
+  'patdir': { t: 'Patient Directory', s: 'Search registered patients', f: renderPatientDir },
+  'p-dash': { t: 'My Dashboard', s: 'Your personal health summary', f: renderPDash },
+  'p-token': { t: 'My Queue Token', s: 'Today\u2019s OPD token and queue position', f: renderPToken },
+  'p-vitals': { t: 'My Vitals', s: 'Recorded vitals history', f: renderPVitals },
+  'p-rx': { t: 'My Prescriptions', s: 'Your prescriptions — printable', f: renderPRx },
+  'p-bills': { t: 'My Bills & Receipts', s: 'Your invoices — printable dual receipts', f: renderPBills }
+};
+
+function showView(id) {
+  if (!session) return;
+  const allowed = ROLE_NAV[session.role].some(n => n.v === id);
+  const r = RENDER[id];
+  if (!allowed || !r) { toast('Access restricted for this portal', 'warn'); return; }
+  destroyCharts();
+  S.view = id;
+  $('#view-title').textContent = r.t;
+  $('#view-sub').textContent = r.s;
+  const root = $('#view-root');
+  root.innerHTML = r.f();
+  root.scrollTop = 0;
+  $$('#sb-nav [data-nav]').forEach(b => b.classList.toggle('active', b.dataset.nav === id));
+  if (id === 'ceo-dash') drawCharts();
+}
+
+function refresh() { if (S.view) showView(S.view); }
+function destroyCharts() { Object.keys(CHARTS).forEach(k => { try { CHARTS[k].destroy(); } catch (e) {} delete CHARTS[k]; }); }
+
+/* ================= CEO PORTAL ================= */
+function renderCEO() {
+  const rev = DB.bills.reduce((s, b) => s + b.total, 0);
+  const pharm = DB.bills.filter(b => b.type === 'Pharmacy').reduce((s, b) => s + b.total, 0);
+  const low = DB.medicines.filter(m => m.stock <= m.min).length;
+  const docRows = DB.doctors.map(d => {
+    const waiting = DB.queue.filter(q => q.did === d.id && q.date === todayStr() && q.status === 'waiting').length;
+    const served = DB.queue.filter(q => q.did === d.id && q.date === todayStr() && q.status === 'done').length;
+    const bc = d.status === 'Available' ? 'b-grn' : d.status === 'In OPD' ? 'b-blue' : 'b-amb';
+    return `<tr><td class="td font-semibold">${esc(d.name)}</td><td class="td">${esc(d.dept)}</td><td class="td">${esc(d.cabin)}</td><td class="td"><span class="badge ${bc}">${esc(d.status)}</span></td><td class="td text-center">${waiting}</td><td class="td text-center">${served}</td></tr>`;
+  }).join('');
+  return `
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+    ${kpi('Total Revenue', money(rev), 'text-blue-700')}
+    ${kpi('Pharmacy Sales', money(pharm), 'text-emerald-700')}
+    ${kpi('Registered Patients', DB.patients.length)}
+    ${kpi("Today's OPD Tokens", todayQ().length, 'text-violet-700')}
+    ${kpi('Active Doctors', DB.doctors.filter(d => d.status !== 'On Leave').length)}
+    ${kpi('Low-Stock SKUs', low, low ? 'text-red-600' : 'text-slate-900')}
+    ${kpi('Prescriptions Issued', DB.rx.length)}
+    ${kpi('Security Events', DB.audit.filter(a => a.type === 'SECURITY').length, 'text-red-600')}
+  </div>
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mt-4">
+    <div class="card xl:col-span-2"><h3 class="font-bold mb-2">Daily OPD Trend (last 7 days)</h3><div class="relative h-64"><canvas id="chart-opd"></canvas></div></div>
+    <div class="card"><h3 class="font-bold mb-2">Department Revenue</h3><div class="relative h-64"><canvas id="chart-dept"></canvas></div></div>
+  </div>
+  <div class="card mt-4 overflow-x-auto">
+    <h3 class="font-bold mb-2">Doctor Status</h3>
+    <table class="w-full"><thead><tr><th class="th">Doctor</th><th class="th">Department</th><th class="th">Cabin</th><th class="th">Status</th><th class="th text-center">Waiting</th><th class="th text-center">Served Today</th></tr></thead><tbody>${docRows}</tbody></table>
+  </div>`;
+}
+
+function drawCharts() {
+  if (!window.Chart) return;
+  const labels = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); labels.push(d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })); }
+  const series = DB.opdHist.slice(); series[6] = todayQ().length;
+  const dept = {};
+  DB.bills.forEach(b => {
+    const k = b.type === 'Pharmacy' ? 'Pharmacy' : (dOf(b.did) ? dOf(b.did).dept : 'Other OPD');
+    dept[k] = (dept[k] || 0) + b.total;
+  });
+  const opdEl = $('#chart-opd'), deptEl = $('#chart-dept');
+  if (opdEl) CHARTS.opd = new Chart(opdEl, {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'OPD Patients', data: series, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,.12)', fill: true, tension: .35 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+  });
+  if (deptEl) CHARTS.dept = new Chart(deptEl, {
+    type: 'bar',
+    data: { labels: Object.keys(dept), datasets: [{ label: 'Revenue (Rs.)', data: Object.values(dept), backgroundColor: ['#2563eb', '#059669', '#7c3aed', '#f59e0b', '#dc2626', '#0891b2'] }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' Rs. ' + Number(c.raw).toLocaleString('en-IN') } } },
+      scales: { y: { ticks: { callback: v => 'Rs. ' + v } } }
+    }
+  });
+}
+
+const searchBox = (key, ph) => `<div class="mb-3"><input class="inp" placeholder="${ph}" value="${esc(S.search[key] || '')}" data-input="search:${key}"></div>`;
+
+function renderCEODoctors() {
+  const rows = DB.doctors.map(d => `<tr class="hover:bg-slate-50"><td class="td font-mono">${d.id}</td><td class="td font-semibold">${esc(d.name)}</td><td class="td">${esc(d.dept)}</td><td class="td">${esc(d.cabin)}</td><td class="td">${money(d.fee)}</td><td class="td">${esc(d.shift)}</td><td class="td"><span class="badge b-blue">${esc(d.status)}</span></td></tr>`).join('');
+  return `<div class="flex justify-between items-center mb-4"><p class="text-sm text-slate-500">${DB.doctors.length} doctors on record</p>
+    <button class="btn btn-p" data-act="open-add-doctor">+ Add New Doctor</button></div>
+    <div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['ID', 'Doctor', 'Department', 'Cabin', 'Fee', 'Shift', 'Status'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderCEOPharm() {
+  const bills = DB.bills.filter(b => b.type === 'Pharmacy').slice().reverse();
+  const rev = bills.reduce((s, b) => s + b.total, 0);
+  const units = bills.reduce((s, b) => s + b.items.reduce((n, i) => n + i.qty, 0), 0);
+  const stockVal = DB.medicines.reduce((s, m) => s + m.stock * m.price, 0);
+  const rows = bills.map(b => `<tr><td class="td font-mono">${b.id}</td><td class="td">${esc(b.time)}</td><td class="td">${esc(pName(b.pid))}</td><td class="td">${b.items.length} lines</td><td class="td">${money(b.discAmt)}</td><td class="td font-bold">${money(b.total)}</td><td class="td"><button class="btn btn-g" data-act="print-bill" data-id="${b.id}">🖨️ Print</button></td></tr>`).join('') || '<tr><td class="td" colspan="7">No pharmacy sales yet.</td></tr>';
+  return `<div class="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-4">${kpi('Pharmacy Revenue', money(rev), 'text-emerald-700')}${kpi('Invoices', bills.length)}${kpi('Units Dispensed', units)}${kpi('Inventory Value', money(stockVal), 'text-blue-700')}</div>
+  <div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['Invoice', 'Date & Time', 'Patient', 'Items', 'Discount', 'Total', 'Receipt'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderStaff() {
+  const rows = DB.staff.map(s => `<tr><td class="td font-semibold">${esc(s.name)}</td><td class="td">${esc(s.role)}</td><td class="td">${esc(s.shift)}</td><td class="td"><span class="badge ${s.status === 'Active' ? 'b-grn' : 'b-amb'}">${esc(s.status)}</span></td></tr>`).join('');
+  return `<div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['Name', 'Role', 'Shift', 'Status'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ================= PATIENT DIRECTORY (shared) ================= */
+function lastVisit(pid) { const q = DB.queue.filter(x => x.pid === pid).slice(-1)[0]; return q ? q.date : '—'; }
+function patRows(q) {
+  const s = (q || '').toLowerCase();
+  const list = DB.patients.filter(p => !s || [p.id, p.name, p.phone].join(' ').toLowerCase().includes(s));
+  return list.map(p => `<tr class="hover:bg-slate-50"><td class="td font-mono">${p.id}</td><td class="td font-semibold">${esc(p.name)}</td><td class="td">${p.age}</td><td class="td">${esc(p.gender)}</td><td class="td">${esc(p.phone)}</td><td class="td"><span class="badge b-red">${esc(p.blood)}</span></td><td class="td">${lastVisit(p.id)}</td></tr>`).join('')
+    || '<tr><td class="td" colspan="7">No patients match your search.</td></tr>';
+}
+function renderPatientDir() {
+  const key = S.view === 'patdir' ? 'pat-staff' : 'pat-ceo';
+  return searchBox(key, 'Search patients by name, MRN or phone...') + `<div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['MRN', 'Name', 'Age', 'Gender', 'Phone', 'Blood', 'Last Visit'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody id="tb-pat">${patRows(S.search[key] || '')}</tbody></table></div>`;
+}
+
+/* ================= DOCTOR PORTAL ================= */
+function renderDocQueue() {
+  const d = session.did;
+  const serving = activeTok();
+  const waiting = DB.queue.filter(q => q.did === d && q.status === 'waiting' && q.date === todayStr()).sort((a, b) => tokSeq(a) - tokSeq(b));
+  const done = DB.queue.filter(q => q.did === d && q.status === 'done' && q.date === todayStr()).length;
+  const p = serving ? pOf(serving.pid) : null;
+  const lv = p ? latestRx(p.id) : null;
+  const card = serving && p ? `
+    <div class="mt-3 flex items-center gap-4">
+      <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold">${esc(p.name[0])}</div>
+      <div>
+        <div class="text-xl font-extrabold">${esc(p.name)}</div>
+        <div class="text-sm text-slate-500">${p.id} · ${p.age} yrs · ${esc(p.gender)} · Blood ${esc(p.blood)}</div>
+        <div class="text-sm">Token <b>${serving.token}</b> · ${esc(cabinOf(d))}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-sm">
+      <div class="bg-slate-50 rounded-lg p-3"><div class="text-xs text-slate-500 mb-1">Latest vitals</div>${lv ? `BP ${esc(lv.vitals.bp)} · Temp ${esc(lv.vitals.temp)}°F · SpO₂ ${esc(lv.vitals.spo2)}%` : 'No vitals on file'}</div>
+      <div class="bg-slate-50 rounded-lg p-3"><div class="text-xs text-slate-500 mb-1">Contact</div>${esc(p.phone)}<br>${esc(p.address || '—')}</div>
+    </div>`
+    : '<p class="mt-4 text-slate-500 text-sm">No patient in consultation. Press <b>Call Next Patient</b> to begin.</p>';
+  return `
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="card xl:col-span-2">
+      <div class="flex justify-between items-center">
+        <span class="text-xs uppercase font-bold text-slate-500">Active Patient</span>
+        ${serving ? '<span class="badge b-grn pulse">IN CONSULT</span>' : '<span class="badge b-gray">Idle</span>'}
+      </div>
+      ${card}
+      <div class="flex flex-wrap gap-2 mt-5">
+        <button class="btn btn-p" data-act="call-next">📢 Call Next Patient</button>
+        <button class="btn btn-s" data-act="open-rx" ${serving ? '' : 'disabled'}>🩺 Enter Vitals & Write Rx</button>
+        <button class="btn btn-d" data-act="complete" ${serving ? '' : 'disabled'}>✔ Complete Consult</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-blue-50 rounded-lg p-3 text-center"><div class="text-2xl font-extrabold text-blue-700">${waiting.length}</div><div class="text-xs text-slate-500">Waiting</div></div>
+        <div class="bg-emerald-50 rounded-lg p-3 text-center"><div class="text-2xl font-extrabold text-emerald-700">${done}</div><div class="text-xs text-slate-500">Completed Today</div></div>
+      </div>
+      <h3 class="font-bold mb-2">Waiting Queue</h3>
+      <div class="space-y-2 max-h-80 overflow-y-auto">
+        ${waiting.map((q, i) => `<div class="flex justify-between items-center border border-slate-200 rounded-lg p-3"><div><div class="font-bold text-blue-700">${q.token}</div><div class="text-sm">${esc(pName(q.pid))}</div></div><span class="badge b-gray">#${i + 1}</span></div>`).join('') || '<p class="text-sm text-slate-500">No patients waiting.</p>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+const KB = [
+  { kw: ['fever', 'cough', 'body ache', 'chills'], dx: ['Influenza', 'Viral upper respiratory infection', 'Dengue fever (if rash / retro-orbital pain)', 'Typhoid (if fever > 5 days)'], labs: ['CBC with differential', 'Dengue NS1 / IgM', 'Malaria RDT', 'Chest X-ray if SpO₂ < 94%'], meds: ['Paracetamol 500mg TDS (max 3 g/day)', 'Oseltamivir 75mg BD × 5 days (if influenza confirmed)', 'ORS, fluids, rest'] },
+  { kw: ['chest pain', 'shortness of breath', 'palpitations', 'breathless'], dx: ['Acute coronary syndrome (rule out urgently)', 'Pneumonia / pleural effusion', 'Pulmonary embolism', 'Anxiety-related chest pain (diagnosis of exclusion)'], labs: ['12-lead ECG (immediate)', 'Troponin I (serial)', 'D-dimer', 'Chest X-ray', 'Lipid profile'], meds: ['Aspirin 300mg stat (if ACS suspected, after review)', 'Refer to emergency / cardiology'] },
+  { kw: ['headache', 'vomiting', 'photophobia', 'neck stiffness'], dx: ['Migraine', 'Tension-type headache', 'Meningitis (red flag)', 'Hypertensive headache'], labs: ['Blood pressure monitoring', 'CBC, ESR', 'CT head if red flags'], meds: ['Paracetamol 1 g SOS', 'Metoclopramide 10mg TDS', 'Avoid NSAIDs if gastritis'] },
+  { kw: ['diarrhea', 'loose motions', 'abdominal pain', 'cramps', 'nausea'], dx: ['Acute gastroenteritis', 'Food poisoning', 'Amoebiasis / giardiasis', 'Acute appendicitis (if RIF pain)'], labs: ['Stool R/E and culture', 'CBC, CRP', 'Serum electrolytes & creatinine'], meds: ['ORS after each loose stool', 'Zinc 20mg OD (children, 14 days)', 'Ondansetron 4mg SOS'] },
+  { kw: ['frequent urination', 'thirst', 'weight loss', 'fatigue'], dx: ['Type 2 diabetes mellitus', 'Urinary tract infection', 'Hyperthyroidism'], labs: ['Fasting & 2h PP glucose', 'HbA1c', 'Urine R/E & culture', 'TSH'], meds: ['Lifestyle modification first', 'Metformin 500mg BD after confirmation'] },
+  { kw: ['rash', 'itching', 'hives', 'swelling'], dx: ['Urticaria (allergic)', 'Contact dermatitis', 'Scabies', 'Drug reaction'], labs: ['CBC with eosinophils', 'Serum IgE (if indicated)'], meds: ['Cetirizine 10mg OD', 'Calamine lotion topical', 'Stop suspected trigger'] },
+  { kw: ['joint pain', 'knee pain', 'back pain', 'stiffness'], dx: ['Osteoarthritis', 'Rheumatoid arthritis', 'Gout', 'Mechanical low back pain'], labs: ['RA factor, anti-CCP', 'ESR / CRP', 'Serum uric acid', 'Joint X-ray'], meds: ['Ibuprofen 400mg TDS after food (short course)', 'Topical diclofenac gel', 'Physiotherapy referral'] },
+  { kw: ['sore throat', 'runny nose', 'sneezing', 'nasal congestion'], dx: ['Common cold', 'Streptococcal pharyngitis', 'Allergic rhinitis'], labs: ['Rapid strep antigen test', 'CBC if fever persists'], meds: ['Paracetamol SOS', 'Cetirizine 10mg at night', 'Warm saline gargles'] }
+];
+const RED_FLAGS = ['chest pain', 'unconscious', 'seizure', 'bleeding', 'neck stiffness', 'breathless', 'confusion'];
+
+function renderDocAI() {
+  return `<div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="card">
+      <h3 class="font-bold">Symptom Intake</h3>
+      <p class="text-xs text-slate-500 mb-2">Comma-separated symptoms, e.g. <i>fever, cough, body ache</i></p>
+      <textarea id="ai-in" rows="5" class="inp" placeholder="fever, cough, body ache"></textarea>
+      <div class="flex gap-2 mt-3"><button class="btn btn-p" data-act="ai-run">🧠 Analyze</button><button class="btn btn-g" data-act="ai-sample">Load sample</button></div>
+      <p class="text-[11px] text-slate-500 mt-4">Clinical decision support only. Final diagnosis and prescribing remain the responsibility of the treating physician.</p>
+    </div>
+    <div id="ai-out" class="xl:col-span-2 space-y-4"><div class="card text-slate-500 text-sm">Results will appear here.</div></div>
+  </div>`;
+}
+
+function renderDocRecords() {
+  const q = S.search.rec || '';
+  const myRxs = DB.rx.filter(r => r.did === session.did).slice().reverse();
+  const rxRows = myRxs.map(r => `<tr><td class="td font-mono">${r.id}</td><td class="td">${esc(r.date)}</td><td class="td">${esc(pName(r.pid))}</td><td class="td">${esc(r.diagnosis)}</td><td class="td">${r.meds.length}</td><td class="td"><button class="btn btn-g" data-act="print-rx" data-id="${r.id}">🖨️ Print Rx</button></td></tr>`).join('')
+    || '<tr><td class="td" colspan="6">No prescriptions issued yet.</td></tr>';
+  return `<div class="mb-3"><input class="inp" placeholder="Search patient records by name, MRN or phone..." value="${esc(q)}" data-input="search:rec"></div>
+  <div class="card overflow-x-auto mb-6"><table class="w-full"><thead><tr>${['MRN', 'Patient', 'Age / Sex', 'Phone', 'Last Diagnosis', 'Rx'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody id="tb-rec">${recRows(q)}</tbody></table></div>
+  <h3 class="font-bold mb-2">My Prescriptions (printable history)</h3>
+  <div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['Rx No', 'Date', 'Patient', 'Diagnosis', 'Medicines', 'Print'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rxRows}</tbody></table></div>`;
+}
+function recRows(q) {
+  const s = (q || '').toLowerCase();
+  const list = DB.patients.filter(p => !s || [p.id, p.name, p.phone].join(' ').toLowerCase().includes(s));
+  return list.map(p => {
+    const r = latestRx(p.id);
+    return `<tr class="hover:bg-slate-50"><td class="td font-mono">${p.id}</td><td class="td font-semibold">${esc(p.name)}</td><td class="td">${p.age} / ${esc(p.gender)}</td><td class="td">${esc(p.phone)}</td><td class="td">${r ? esc(r.diagnosis) : '—'}</td><td class="td">${r ? `<button class="btn btn-g" data-act="print-rx" data-id="${r.id}">🖨️ Latest Rx</button>` : '<span class="text-slate-400 text-xs">No Rx</span>'}</td></tr>`;
+  }).join('') || '<tr><td class="td" colspan="6">No records match.</td></tr>';
+}
+
+/* ================= RECEPTION & PHARMACY POS ================= */
+function cartTotals() {
+  const sub = S.cart.reduce((s, c) => { const m = medOf(c.id); return s + (m ? m.price * c.qty : 0); }, 0);
+  const disc = Math.round(sub * S.discount / 100);
+  return { sub, disc, total: sub - disc };
+}
+
+function renderPOS() {
+  const pats = DB.patients.map(p => `<option value="${p.id}" ${S.posPatient === p.id ? 'selected' : ''}>${p.id} — ${esc(p.name)}</option>`).join('');
+  return `<div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="xl:col-span-2">
+      <div class="mb-3"><input class="inp" placeholder="Search medicine by name, category or ID..." value="${esc(S.search.pos || '')}" data-input="search:pos"></div>
+      <div id="pos-grid" class="grid grid-cols-2 md:grid-cols-3 gap-3">${posGridHTML(S.search.pos || '')}</div>
+    </div>
+    <div class="card">
+      <h3 class="font-bold">Billing Cart</h3>
+      <label class="lbl mt-3">Patient</label>
+      <select class="inp" data-input="pos-patient"><option value="">-- Select patient --</option>${pats}</select>
+      <div id="cart-panel" class="mt-3">${cartHTML()}</div>
+    </div>
+  </div>`;
+}
+
+function posGridHTML(q) {
+  const s = (q || '').toLowerCase();
+  const list = DB.medicines.filter(m => !s || (m.name + ' ' + m.cat + ' ' + m.id).toLowerCase().includes(s));
+  return list.map(m => {
+    const blocked = daysUntil(m.expiry) < 0 || m.stock <= 0;
+    return `<div class="card"><div class="flex justify-between items-start"><span class="font-mono text-xs text-slate-400">${m.id}</span>${stockBadge(m)}</div>
+      <div class="font-bold mt-1">${esc(m.name)}</div><div class="text-xs text-slate-500">${esc(m.cat)} · Stock ${m.stock}</div>
+      <div class="flex justify-between items-center mt-3"><span class="font-extrabold text-blue-700">${money(m.price)}</span>
+      <button class="btn btn-p" data-act="add-cart" data-id="${m.id}" ${blocked ? 'disabled' : ''}>Add</button></div></div>`;
+  }).join('') || '<p class="text-slate-500 text-sm">No medicines match your search.</p>';
+}
+
+function cartHTML() {
+  if (!S.cart.length) return '<div class="text-center text-slate-400 py-10 text-sm">Cart is empty. Add medicines from the catalogue.</div>';
+  const t = cartTotals();
+  const lines = S.cart.map(c => {
+    const m = medOf(c.id);
+    return `<div class="flex items-center justify-between py-2 border-b border-slate-100 gap-2">
+      <div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">${esc(m.name)}</div><div class="text-xs text-slate-500">${money(m.price)} × ${c.qty}</div></div>
+      <div class="flex items-center gap-1">
+        <button class="btn btn-g px-2" data-act="cart-dec" data-id="${c.id}">−</button>
+        <span class="w-7 text-center font-bold">${c.qty}</span>
+        <button class="btn btn-g px-2" data-act="cart-inc" data-id="${c.id}">+</button>
+        <button class="btn btn-d px-2 ml-1" data-act="cart-rm" data-id="${c.id}">✕</button>
+      </div></div>`;
+  }).join('');
+  return `${lines}
+    <div class="mt-3 space-y-2 text-sm">
+      <div class="flex justify-between"><span>Subtotal</span><span id="cart-sub">${money(t.sub)}</span></div>
+      <div class="flex justify-between items-center"><span>Discount (%)</span><input type="number" min="0" max="100" class="inp w-24 text-right" value="${S.discount}" data-input="pos-disc"></div>
+      <div class="flex justify-between text-emerald-700"><span>Discount amount</span><span id="cart-disc">- ${money(t.disc)}</span></div>
+      <div class="flex justify-between text-lg font-extrabold pt-2 border-t"><span>Total</span><span id="cart-total">${money(t.total)}</span></div>
+    </div>
+    <button class="btn btn-s w-full py-3 mt-4" data-act="pos-complete">Complete Sale & Print Dual Receipt</button>`;
+}
+
+function refreshCart() { const c = $('#cart-panel'); if (c) c.innerHTML = cartHTML(); }
+function refreshTotals() {
+  const t = cartTotals();
+  const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+  set('#cart-sub', money(t.sub)); set('#cart-disc', '- ' + money(t.disc)); set('#cart-total', money(t.total));
+}
+
+function invoiceCopy(bill, label) {
+  const p = pOf(bill.pid) || { name: 'Walk-in', id: '-', age: '-', gender: '-', phone: '-' };
+  const rows = bill.items.map((it, i) => `<tr><td class="py-1 border-b text-xs">${i + 1}</td><td class="py-1 border-b text-xs">${esc(it.name)}</td><td class="py-1 border-b text-xs text-center">${it.qty}</td><td class="py-1 border-b text-xs text-right">${money(it.price)}</td><td class="py-1 border-b text-xs text-right">${money(it.amount)}</td></tr>`).join('');
+  return `<div class="border-2 border-slate-800 rounded p-4 flex-1 min-w-0">
+    <div class="text-center border-b pb-2 mb-2">
+      <div class="font-extrabold text-lg">MedCore AI Hospital & Pharmacy</div>
+      <div class="text-[11px] text-slate-600">Main Boulevard, Lahore · +92-42-111-6326</div>
+      <div class="mt-1 text-xs font-bold tracking-widest">${label}</div>
+    </div>
+    <div class="text-xs grid grid-cols-2 gap-x-2 gap-y-1 mb-2">
+      <div>Invoice: <b>${bill.id}</b></div><div>${esc(bill.time)}</div>
+      <div>Patient: <b>${esc(p.name)}</b></div><div>MRN: ${p.id}</div>
+      <div>Age / Gender: ${p.age} / ${esc(p.gender)}</div><div>Phone: ${esc(p.phone)}</div>
+    </div>
+    <table class="w-full"><thead><tr><th class="text-xs text-left border-b-2">#</th><th class="text-xs text-left border-b-2">Item</th><th class="text-xs border-b-2">Qty</th><th class="text-xs text-right border-b-2">Rate</th><th class="text-xs text-right border-b-2">Amount</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="text-xs mt-2 space-y-1">
+      <div class="flex justify-between"><span>Subtotal</span><span>${money(bill.subtotal)}</span></div>
+      <div class="flex justify-between"><span>Discount (${bill.discount}%)</span><span>- ${money(bill.discAmt)}</span></div>
+      <div class="flex justify-between font-extrabold text-sm border-t pt-1"><span>NET TOTAL</span><span>${money(bill.total)}</span></div>
+    </div>
+    <div class="mt-10 text-[10px] text-slate-500 flex justify-between"><span>Authorised Signatory</span><span>Received By</span></div>
+  </div>`;
+}
+function dualInvoiceHTML(bill) {
+  return `<div class="flex gap-4">${invoiceCopy(bill, 'PATIENT COPY')}${invoiceCopy(bill, 'HOSPITAL / PHARMACY COPY')}</div>`;
+}
+
+function mkBill(id, type, pid, did, items, disc = 0) {
+  const sub = items.reduce((s, i) => s + i.amount, 0);
+  const dA = Math.round(sub * disc / 100);
+  return { id, type, pid, did, items, subtotal: sub, discount: disc, discAmt: dA, total: sub - dA, date: todayStr(), time: nowStr() };
+}
+
+/* Register */
+function renderRegister() {
+  const lp = S.lastReg;
+  return `${lp ? `<div class="card border-emerald-300 bg-emerald-50 mb-4 max-w-3xl">✅ Patient <b>${lp.id}</b> (${esc(lp.name)}) saved permanently. Portal PIN: <b>${esc(lp.pin)}</b></div>` : ''}
+  <form data-form="reg" class="card grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+    <div class="md:col-span-2"><label class="lbl">Full name</label><input name="fullname" class="inp" required></div>
+    <div><label class="lbl">Age</label><input name="age" type="number" min="0" max="120" class="inp" required></div>
+    <div><label class="lbl">Gender</label><select name="gender" class="inp"><option>Male</option><option>Female</option><option>Other</option></select></div>
+    <div><label class="lbl">Phone</label><input name="phone" class="inp" required placeholder="0300-0000000"></div>
+    <div><label class="lbl">Blood group</label><select name="blood" class="inp"><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option></select></div>
+    <div class="md:col-span-2"><label class="lbl">Address</label><input name="address" class="inp"></div>
+    <div><label class="lbl">Portal PIN (4 digits)</label><input name="pin" class="inp" required pattern="\\d{4}" maxlength="4" placeholder="1234"></div>
+    <div class="md:col-span-2 flex justify-end"><button class="btn btn-p px-6 py-2.5">Register Patient</button></div>
+  </form>`;
+}
+
+/* Token */
+function renderToken() {
+  const pats = DB.patients.map(p => `<option value="${p.id}">${p.id} — ${esc(p.name)}</option>`).join('');
+  const docs = DB.doctors.map(d => `<option value="${d.id}">${esc(d.name)} — ${esc(d.dept)} (${money(d.fee)})</option>`).join('');
+  const lt = S.lastToken;
+  return `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4 max-w-5xl">
+    <form data-form="token" class="card grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="md:col-span-2"><label class="lbl">Patient</label><select name="pid" class="inp">${pats}</select></div>
+      <div class="md:col-span-2"><label class="lbl">Doctor</label><select name="did" class="inp" data-input="tok-doc">${docs}</select></div>
+      <div><label class="lbl">OPD fee (Rs.)</label><input id="tok-fee" name="fee" type="number" min="0" class="inp" value="${DB.doctors[0] ? DB.doctors[0].fee : 500}"></div>
+      <div class="flex items-end"><button class="btn btn-p w-full py-2.5">Generate Token & Print Slip</button></div>
+    </form>
+    <div class="card">
+      <h3 class="font-bold mb-2">Last Issued Token</h3>
+      ${lt ? `<div class="text-4xl font-black text-blue-700">${lt.token}</div>
+        <div class="text-sm mt-1">${esc(pName(lt.pid))} → ${esc(dName(lt.did))} · ${esc(cabinOf(lt.did))}</div>
+        <div class="text-sm">Fee: ${money(lt.fee)}</div>
+        <button class="btn btn-g mt-4" data-act="print-token" data-id="${lt.token}">🖨️ Reprint Slip</button>`
+        : '<p class="text-sm text-slate-500">No token issued in this session.</p>'}
+    </div>
+  </div>`;
+}
+
+/* Dual-copy OPD token slip: PATIENT COPY on top, ✂ CUT HERE, HOSPITAL / ACCOUNTS COPY below.
+   Plain-CSS .tok-* classes + the @media print full-page voucher layout fill ONE A4 sheet 50/50. */
+function tokenCopyHTML(q, label, footerHTML) {
+  const p = pOf(q.pid) || { name: '-', id: '-' };
+  const pos = DB.queue.filter(x => x.did === q.did && x.date === q.date && x.status === 'waiting' && tokSeq(x) <= tokSeq(q)).length;
+  return `<div class="tok-slip">
+    <div class="tok-head">
+      <div class="tok-hname">MedCore AI Hospital & Pharmacy</div>
+      <div class="tok-hlabel">${label}</div>
+    </div>
+    <div class="tok-time">${esc(q.time)}</div>
+    <div class="tok-box">
+      <div class="tok-boxlbl">Token Number</div>
+      <div class="tok-num">${q.token}</div>
+    </div>
+    <table class="tok-tbl">
+      <tr><td>Patient Name</td><td>${esc(p.name)}</td></tr>
+      <tr><td>MRN</td><td>${esc(p.id)}</td></tr>
+      <tr><td>Doctor</td><td>${esc(dName(q.did))}</td></tr>
+      <tr><td>Cabin</td><td>${esc(cabinOf(q.did))}</td></tr>
+      <tr><td>OPD Fee</td><td>${money(q.fee)}</td></tr>
+      <tr><td>Queue Position</td><td>#${pos}</td></tr>
+    </table>
+    <div class="tok-foot">${footerHTML}</div>
+  </div>`;
+}
+
+function tokenSlipHTML(q) {
+  const top = tokenCopyHTML(q, 'PATIENT COPY',
+    '<div class="tok-note">Please keep this slip. Watch the Waiting Room display for NOW SERVING.</div>');
+  const bottom = tokenCopyHTML(q, 'HOSPITAL / ACCOUNTS COPY',
+    '<div class="tok-sign">Reception Clerk Sign / Stamp</div>');
+  return `<div class="tok-wrap">
+    ${top}
+    <div class="tok-cut">✂ --- CUT HERE --- ✂</div>
+    ${bottom}
+  </div>`;
+}
+
+/* Inventory */
+function invRows(q) {
+  const s = (q || '').toLowerCase();
+  return DB.medicines.filter(m => !s || (m.name + ' ' + m.cat + ' ' + m.id).toLowerCase().includes(s)).map(m => `<tr class="hover:bg-slate-50">
+    <td class="td font-mono">${m.id}</td><td class="td font-semibold">${esc(m.name)}</td><td class="td">${esc(m.cat)}</td>
+    <td class="td font-bold ${m.stock <= m.min ? 'text-red-600' : ''}">${m.stock}</td><td class="td">${m.min}</td>
+    <td class="td">${esc(m.expiry)}</td><td class="td">${money(m.price)}</td><td class="td">${stockBadge(m)}</td>
+    <td class="td"><button class="btn btn-g" data-act="open-restock" data-id="${m.id}">+ Restock</button></td></tr>`).join('')
+    || '<tr><td class="td" colspan="9">No medicines match.</td></tr>';
+}
+function renderInventory() {
+  const low = DB.medicines.filter(m => m.stock <= m.min).length;
+  return `<div class="flex flex-wrap gap-2 justify-between items-center mb-3">
+    <div class="flex-1 min-w-[220px] max-w-md"><input class="inp" placeholder="Search inventory..." value="${esc(S.search.inv || '')}" data-input="search:inv"></div>
+    <div class="flex gap-2"><button class="btn btn-s" data-act="open-restock">+ Restock</button><button class="btn btn-p" data-act="open-add-med">+ Add New Medicine</button></div>
+  </div>
+  <p class="text-sm text-slate-500 mb-3">${DB.medicines.length} SKUs · <span class="${low ? 'text-red-600 font-semibold' : ''}">${low} low-stock</span></p>
+  <div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['ID', 'Medicine', 'Category', 'Stock', 'Reorder At', 'Expiry', 'Price', 'Status', 'Action'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody id="tb-inv">${invRows(S.search.inv || '')}</tbody></table></div>`;
+}
+
+/* ================= PATIENT PORTAL ================= */
+function renderPDash() {
+  const p = pOf(session.pid);
+  const t = myTok();
+  const rx = myRx();
+  const bills = myBills();
+  const paid = bills.reduce((s, b) => s + b.total, 0);
+  const lv = rx[0] ? rx[0].vitals : null;
+  return `<div class="card mb-4" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);border:0;color:#fff;margin-bottom:1rem;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:1.4rem;align-items:center;">
+      <div style="min-width:0;">
+        <div style="font-size:.68rem;opacity:.85;text-transform:uppercase;letter-spacing:.28em;font-weight:700;">Patient Health Profile</div>
+        <div style="font-size:1.9rem;font-weight:800;line-height:1.2;margin-top:.3rem;">Welcome, ${esc(p.name)}</div>
+        <div style="font-size:.85rem;opacity:.95;margin-top:.5rem;">MRN: <b>${esc(p.id)}</b> · Age/Sex: <b>${p.age} / ${esc(p.gender)}</b> · Blood Group: <b>${esc(p.blood)}</b></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;font-size:.85rem;">
+        <span style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:.35rem 1rem;white-space:nowrap;">📞 Phone: <b>${esc(p.phone)}</b></span>
+        <span style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:.35rem 1rem;max-width:100%;">📍 Address: <b>${esc(p.address || '—')}</b></span>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
+    ${kpi("Today's Token", t ? t.token : 'None', 'text-blue-700')}
+    ${kpi('Queue Status', t ? statusLabel(t.status) : '—')}
+    ${kpi('Prescriptions', rx.length)}
+    ${kpi('Total Billed', money(paid), 'text-emerald-700')}
+  </div>
+  <div class="card mt-4"><h3 class="font-bold">Latest Vitals</h3>${lv ? vitalsGrid(lv) : '<p class="text-sm text-slate-500 mt-2">No vitals recorded yet.</p>'}</div>`;
+}
+
+function renderPToken() {
+  const q = myTok();
+  if (!q) return '<div class="card text-slate-600">No OPD token has been issued for you today. Please visit the reception desk.</div>';
+  const d = dOf(q.did);
+  const ahead = q.status === 'waiting'
+    ? DB.queue.filter(x => x.did === q.did && x.date === q.date && x.status === 'waiting' && tokSeq(x) < tokSeq(q)).length + (activeTok() && activeTok().did === q.did ? 1 : 0)
+    : 0;
+  return `<div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="card text-center">
+      <div class="text-xs uppercase tracking-widest text-slate-500">Your Token</div>
+      <div class="text-6xl font-black text-blue-700 my-3">${q.token}</div>
+      <span class="badge ${q.status === 'serving' ? 'b-grn pulse' : q.status === 'done' ? 'b-gray' : 'b-amb'}">${statusLabel(q.status)}</span>
+      <p class="text-sm text-slate-600 mt-4">${q.status === 'waiting' ? `Patients ahead of you: <b>${ahead}</b>` : q.status === 'serving' ? 'Please proceed to your cabin now.' : 'Your consultation is complete.'}</p>
+    </div>
+    <div class="card">
+      <h3 class="font-bold mb-3">Visit Details</h3>
+      <div class="text-sm space-y-2">
+        <div>Doctor: <b>${esc(d ? d.name : '—')}</b></div>
+        <div>Department: <b>${esc(d ? d.dept : '—')}</b></div>
+        <div>Cabin: <b>${esc(d ? d.cabin : '—')}</b></div>
+        <div>Date: <b>${esc(q.date)}</b> · Issued ${esc(q.time)}</div>
+        <div>OPD fee: <b>${money(q.fee)}</b></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPVitals() {
+  const rx = myRx();
+  const rows = rx.map(r => `<tr><td class="td">${esc(r.date)}</td><td class="td">${esc(dName(r.did))}</td><td class="td">${esc(r.vitals.bp)}</td><td class="td">${esc(r.vitals.temp)} °F</td><td class="td">${esc(r.vitals.pulse)}</td><td class="td">${esc(r.vitals.spo2)}%</td><td class="td">${esc(r.vitals.weight)} kg</td></tr>`).join('')
+    || '<tr><td class="td" colspan="7">No vitals recorded yet.</td></tr>';
+  return `<div class="card mb-4"><h3 class="font-bold">Latest Reading</h3>${rx[0] ? vitalsGrid(rx[0].vitals) : '<p class="text-sm text-slate-500 mt-2">No readings yet.</p>'}</div>
+  <div class="card overflow-x-auto"><h3 class="font-bold mb-2">Vitals History</h3><table class="w-full"><thead><tr>${['Date', 'Doctor', 'BP', 'Temp', 'Pulse', 'SpO₂', 'Weight'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderPRx() {
+  const rx = myRx();
+  const rows = rx.map(r => `<tr><td class="td font-mono">${r.id}</td><td class="td">${esc(r.date)}</td><td class="td">${esc(dName(r.did))}</td><td class="td">${esc(r.diagnosis)}</td><td class="td">${r.meds.map(m => esc(m.name)).join(', ')}</td><td class="td"><button class="btn btn-p" data-act="print-rx" data-id="${r.id}">🖨️ Print Rx</button></td></tr>`).join('')
+    || '<tr><td class="td" colspan="6">No prescriptions yet.</td></tr>';
+  return `<div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['Rx No', 'Date', 'Doctor', 'Diagnosis', 'Medicines', 'Print'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderPBills() {
+  const bills = myBills();
+  const rows = bills.map(b => `<tr><td class="td font-mono">${b.id}</td><td class="td">${esc(b.time)}</td><td class="td">${b.type === 'OPD' ? 'OPD Consultation' : 'Pharmacy'}</td><td class="td">${b.items.length} item(s)</td><td class="td font-bold">${money(b.total)}</td><td class="td"><button class="btn btn-p" data-act="print-bill" data-id="${b.id}">🖨️ Print Dual Receipt</button></td></tr>`).join('')
+    || '<tr><td class="td" colspan="6">No bills yet.</td></tr>';
+  return `<div class="card overflow-x-auto"><table class="w-full"><thead><tr>${['Invoice', 'Date & Time', 'Type', 'Items', 'Total', 'Receipt'].map(h => `<th class="th">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ================= LIVE OPD DISPLAY ================= */
+function openLive() { renderLive(); toggleModal('live-opd-modal', true); }
+
+function renderLive() {
+  const body = $('#live-body');
+  if (!body) return;
+  const today = todayQ();
+  const serving = today.filter(q => q.status === 'serving');
+  const cur = serving.find(q => q.token === DB.lastCalled) || serving[serving.length - 1] || null;
+  const up = today.filter(q => q.status === 'waiting').sort((a, b) => tokSeq(a) - tokSeq(b));
+  body.innerHTML = `
+  <header class="flex justify-between items-center px-10 py-6 border-b border-slate-800">
+    <div><div class="text-3xl font-extrabold">MedCore AI · Waiting Room Display</div><div class="text-slate-400">${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
+    <button class="btn btn-d text-base px-6 py-3" data-act="close-live">✕ Close Display</button>
+  </header>
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 p-8 min-h-0">
+    <section class="lg:col-span-3 rounded-3xl bg-gradient-to-br from-blue-700 to-cyan-600 flex flex-col items-center justify-center text-center p-8">
+      <div class="uppercase tracking-[.4em] text-blue-100 text-lg">Now Serving</div>
+      <div class="text-[9rem] leading-none font-black my-4 ${cur ? 'pulse' : ''}">${cur ? cur.token : '—'}</div>
+      <div class="text-4xl font-bold">${cur ? esc(pName(cur.pid)) : 'Please wait'}</div>
+      <div class="text-xl mt-3 text-blue-100">${cur ? esc(dName(cur.did)) + ' · ' + esc(cabinOf(cur.did)) : ''}</div>
+    </section>
+    <section class="lg:col-span-2 bg-slate-900 rounded-3xl p-6 flex flex-col min-h-0">
+      <h2 class="text-xl font-bold mb-4 text-slate-300">Upcoming Queue</h2>
+      <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+        ${up.map(q => `<div class="flex items-center justify-between bg-slate-800 rounded-xl p-4">
+          <div><div class="text-2xl font-black text-cyan-300">${q.token}</div><div class="text-sm text-slate-200">${esc(pName(q.pid))}</div></div>
+          <div class="text-right text-sm text-slate-400">${esc(dName(q.did))}<br>${esc(cabinOf(q.did))}</div></div>`).join('') || '<p class="text-slate-500">No patients waiting.</p>'}
+      </div>
+    </section>
+  </main>`;
+}
+
+function renderAudit() {
+  const sec = DB.audit.filter(a => a.type === 'SECURITY').length;
+  $('#audit-body').innerHTML = `<p class="text-sm text-slate-500 mb-3">Security events: <b class="text-red-600">${sec}</b> · Total log entries: ${DB.audit.length}</p>
+  <div class="overflow-auto max-h-[60vh] border rounded-lg"><table class="w-full"><thead><tr><th class="th">Time</th><th class="th">User</th><th class="th">Type</th><th class="th">Event</th></tr></thead><tbody>
+  ${DB.audit.slice(0, 300).map(a => `<tr><td class="td whitespace-nowrap">${esc(a.t)}</td><td class="td">${esc(a.user)}</td><td class="td"><span class="badge ${a.type === 'SECURITY' ? 'b-red' : a.type === 'WARN' ? 'b-amb' : 'b-blue'}">${esc(a.type)}</span></td><td class="td">${esc(a.action)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* ================= PRINTABLE DOCUMENTS ================= */
+function rxHTML(rx) {
+  const p = pOf(rx.pid) || { name: '-', id: '-', age: '-', gender: '-' };
+  const d = dOf(rx.did) || { name: '-', dept: '-', cabin: '-' };
+  const v = rx.vitals;
+  const meds = rx.meds.map((m, i) => `<tr><td class="py-1 border-b text-sm">${i + 1}. <b>${esc(m.name)}</b></td><td class="py-1 border-b text-sm">${esc(m.dose)}</td><td class="py-1 border-b text-sm">${esc(m.freq)}</td><td class="py-1 border-b text-sm">${esc(m.days)}</td></tr>`).join('');
+  return `<div class="border-2 border-slate-800 rounded-lg p-6">
+    <div class="flex justify-between items-start border-b-2 pb-3">
+      <div><div class="text-xl font-extrabold">MedCore AI Hospital</div><div class="text-xs text-slate-600">${esc(d.name)} · ${esc(d.dept)} · ${esc(d.cabin)}</div></div>
+      <div class="text-right text-xs">Rx No: <b>${rx.id}</b><br>Date: ${esc(rx.date)}</div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 text-sm my-3"><div>Patient: <b>${esc(p.name)}</b></div><div>MRN: ${p.id}</div><div>Age / Sex: ${p.age} / ${esc(p.gender)}</div></div>
+    <div class="text-xs bg-slate-50 p-2 rounded">BP ${esc(v.bp)} mmHg · Temp ${esc(v.temp)} °F · Pulse ${esc(v.pulse)} bpm · SpO₂ ${esc(v.spo2)}% · Weight ${esc(v.weight)} kg</div>
+    <div class="mt-3 text-sm"><b>Symptoms:</b> ${esc(rx.symptoms || '—')}</div>
+    <div class="text-sm"><b>Diagnosis:</b> ${esc(rx.diagnosis)}</div>
+    <div class="text-4xl font-serif mt-3">℞</div>
+    <table class="w-full mt-1"><thead><tr><th class="text-left text-xs border-b-2">Medicine</th><th class="text-left text-xs border-b-2">Dose</th><th class="text-left text-xs border-b-2">Frequency</th><th class="text-left text-xs border-b-2">Duration</th></tr></thead><tbody>${meds}</tbody></table>
+    <div class="mt-3 text-sm"><b>Advice:</b> ${esc(rx.notes || 'Review after 5 days or sooner if symptoms worsen.')}</div>
+    <div class="flex justify-between mt-12 text-xs"><span>Patient Signature</span><span>${esc(d.name)}<br>Signature & Stamp</span></div>
+  </div>`;
+}
+
+/* ================= ACTION CONTROLLER ================= */
+const ACT = {};
+const INPUTS = {};
+const FORMS = {};
+const SEARCH = {
+  'pat-ceo': { el: '#tb-pat', f: patRows },
+  'pat-staff': { el: '#tb-pat', f: patRows },
+  'rec': { el: '#tb-rec', f: recRows },
+  'inv': { el: '#tb-inv', f: invRows },
+  'pos': { el: '#pos-grid', f: posGridHTML }
+};
+
+ACT.view = el => showView(el.dataset.v);
+ACT.audit = () => { renderAudit(); toggleModal('audit-log-modal', true); };
+ACT.live = () => openLive();
+ACT['close-live'] = () => toggleModal('live-opd-modal', false);
+ACT.logout = () => logout();
+ACT.quick = el => quick(el.dataset.role);
+ACT.slide = el => { stopSlides(); showSlide(Number(el.dataset.i)); startSlides(); };
+ACT['slide-next'] = () => { stopSlides(); showSlide(slideIdx + 1); startSlides(); };
+ACT['slide-prev'] = () => { stopSlides(); showSlide(slideIdx - 1); startSlides(); };
+ACT['close-modal'] = el => toggleModal(el.dataset.m, false);
+ACT['open-add-doctor'] = () => toggleModal('add-doctor-modal', true);
+ACT['open-add-med'] = () => toggleModal('add-medicine-modal', true);
+ACT['open-restock'] = el => {
+  const sel = $('#restock-med');
+  sel.innerHTML = DB.medicines.map(m => `<option value="${m.id}">${m.id} — ${esc(m.name)} (stock ${m.stock})</option>`).join('');
+  if (el.dataset.id) sel.value = el.dataset.id;
+  $('#restock-modal form').reset();
+  toggleModal('restock-modal', true);
+};
+ACT.print = () => window.print();
+ACT['close-print'] = () => toggleModal('print-modal', false);
+
+/* POS */
+ACT['add-cart'] = el => {
+  const m = medOf(el.dataset.id); if (!m) return;
+  const c = S.cart.find(x => x.id === m.id);
+  if ((c ? c.qty : 0) >= m.stock) return toast(`Only ${m.stock} units of ${m.name} in stock`, 'warn');
+  if (c) c.qty++; else S.cart.push({ id: m.id, qty: 1 });
+  refreshCart();
+};
+ACT['cart-inc'] = el => {
+  const c = S.cart.find(x => x.id === el.dataset.id), m = medOf(el.dataset.id);
+  if (!c || !m) return;
+  if (c.qty >= m.stock) return toast(`Maximum available stock reached (${m.stock})`, 'warn');
+  c.qty++; refreshCart();
+};
+ACT['cart-dec'] = el => {
+  const c = S.cart.find(x => x.id === el.dataset.id); if (!c) return;
+  c.qty--; if (c.qty <= 0) S.cart = S.cart.filter(x => x !== c);
+  refreshCart();
+};
+ACT['cart-rm'] = el => { S.cart = S.cart.filter(x => x.id !== el.dataset.id); refreshCart(); };
+ACT['pos-complete'] = () => {
+  if (!S.cart.length) return toast('Cart is empty', 'warn');
+  const pid = S.posPatient;
+  if (!pid || !pOf(pid)) return toast('Select a registered patient before billing', 'warn');
+  for (const c of S.cart) {
+    const m = medOf(c.id);
+    if (!m || c.qty > m.stock) return toast(`Insufficient stock for ${m ? m.name : c.id}`, 'danger');
+  }
+  const t = cartTotals();
+  const items = S.cart.map(c => { const m = medOf(c.id); m.stock -= c.qty; return { name: m.name, qty: c.qty, price: m.price, amount: m.price * c.qty }; });
+  const bill = { id: 'INV-' + nxt(DB.bills, 'id', 2001), type: 'Pharmacy', pid, did: '', items, subtotal: t.sub, discount: S.discount, discAmt: t.disc, total: t.total, date: todayStr(), time: nowStr() };
+  DB.bills.push(bill);
+  S.cart = []; S.discount = 0;
+  audit(`Pharmacy sale ${bill.id} to ${pName(pid)} — ${money(bill.total)}`);
+  toast(`Sale ${bill.id} completed. Stock updated.`, 'ok');
+  refresh();
+  openPrint(dualInvoiceHTML(bill));
+};
+
+/* Queue & clinical */
+ACT['call-next'] = () => {
+  const d = session.did;
+  if (activeTok()) return toast('Complete the current consult before calling the next patient', 'warn');
+  const next = DB.queue.filter(q => q.did === d && q.status === 'waiting' && q.date === todayStr()).sort((a, b) => tokSeq(a) - tokSeq(b))[0];
+  if (!next) return toast('No patients waiting in your queue', 'warn');
+  next.status = 'serving'; next.calledAt = nowStr();
+  DB.lastCalled = next.token;
+  audit(`Called ${next.token} (${pName(next.pid)}) to ${dName(d)}`);
+  chime();
+  toast(`Now serving ${next.token}: ${pName(next.pid)}`, 'ok');
+  refresh();
+};
+ACT.complete = () => {
+  const s = activeTok(); if (!s) return;
+  s.status = 'done'; s.completedAt = nowStr();
+  audit('Consult completed: ' + s.token);
+  toast('Consult completed', 'ok');
+  refresh();
+};
+ACT['open-rx'] = () => {
+  const s = activeTok();
+  if (!s) return toast('Call a patient first', 'warn');
+  const p = pOf(s.pid);
+  $('#rx-title').textContent = `Vitals & Rx — ${p.name} (${s.token})`;
+  const lr = latestRx(p.id);
+  const E = $('#rx-modal form').elements;
+  $('#rx-modal form').reset();
+  if (lr) { E.bp.value = lr.vitals.bp; E.temp.value = lr.vitals.temp; E.pulse.value = lr.vitals.pulse; E.spo2.value = lr.vitals.spo2; E.weight.value = lr.vitals.weight; }
+  toggleModal('rx-modal', true);
+};
+ACT['ai-sample'] = () => { const t = $('#ai-in'); if (t) t.value = 'fever, cough, body ache'; };
+ACT['ai-run'] = () => {
+  const t = $('#ai-in'); const txt = (t ? t.value : '').trim().toLowerCase();
+  if (!txt) return toast('Enter at least one symptom', 'warn');
+  const scored = KB.map(k => ({ k, score: k.kw.reduce((n, kw) => n + (txt.includes(kw) ? 1 : 0), 0) }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  const flags = RED_FLAGS.filter(f => txt.includes(f));
+  let html = '';
+  if (flags.length) html += `<div class="card border-red-300 bg-red-50"><b class="text-red-700">⚠ Red-flag symptoms detected (${esc(flags.join(', '))})</b><p class="text-sm text-red-700 mt-1">Consider urgent in-person evaluation / emergency referral.</p></div>`;
+  if (!scored.length) {
+    html += `<div class="card"><b>No strong pattern matched.</b><p class="text-sm text-slate-600 mt-1">Take a detailed history (onset, duration, severity, associated symptoms). Baseline investigations: CBC, CRP, urine R/E, and vitals review.</p></div>`;
+  } else {
+    html += scored.map((x, i) => `<div class="card">
+      <div class="flex justify-between items-center"><h4 class="font-bold">${i === 0 ? '🥇 Most likely' : 'Differential #' + (i + 1)}</h4><span class="badge b-blue">Match ${x.score}/${x.k.kw.length} keywords</span></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3 text-sm">
+        <div><div class="lbl">Differential diagnosis</div><ul class="list-disc pl-4 space-y-1">${x.k.dx.map(d => `<li>${esc(d)}</li>`).join('')}</ul></div>
+        <div><div class="lbl">Lab tests</div><ul class="list-disc pl-4 space-y-1">${x.k.labs.map(d => `<li>${esc(d)}</li>`).join('')}</ul></div>
+        <div><div class="lbl">Medicine suggestions</div><ul class="list-disc pl-4 space-y-1">${x.k.meds.map(d => `<li>${esc(d)}</li>`).join('')}</ul></div>
+      </div></div>`).join('');
+  }
+  const out = $('#ai-out'); if (out) out.innerHTML = html;
+};
+
+/* Printing with privacy enforcement */
+ACT['print-rx'] = el => {
+  const r = DB.rx.find(x => x.id === el.dataset.id); if (!r) return;
+  if (session.role === 'patient' && r.pid !== session.pid) return toast('Privacy lock: this record belongs to another patient', 'danger');
+  openPrint(rxHTML(r));
+};
+ACT['print-bill'] = el => {
+  const b = DB.bills.find(x => x.id === el.dataset.id); if (!b) return;
+  if (session.role === 'patient' && b.pid !== session.pid) return toast('Privacy lock: this invoice belongs to another patient', 'danger');
+  openPrint(dualInvoiceHTML(b));
+};
+ACT['print-token'] = el => {
+  const q = DB.queue.find(x => x.token === el.dataset.id); if (q) openPrint(tokenSlipHTML(q));
+};
+
+/* ================= INPUT CONTROLLER ================= */
+INPUTS.search = (el, key) => {
+  S.search[key] = el.value;
+  const t = SEARCH[key];
+  if (!t) return;
+  const host = $(t.el);
+  if (host) host.innerHTML = t.f(el.value);
+};
+INPUTS['pos-patient'] = el => { S.posPatient = el.value; };
+INPUTS['pos-disc'] = el => { S.discount = Math.min(100, Math.max(0, Number(el.value) || 0)); refreshTotals(); };
+INPUTS['tok-doc'] = el => { const d = dOf(el.value); const f = $('#tok-fee'); if (d && f) f.value = d.fee; };
+
+/* ================= FORM CONTROLLER ================= */
+FORMS.login = () => login($('#login-id').value, $('#login-pw').value);
+
+FORMS.reg = f => {
+  const E = f.elements;
+  const name = E.fullname.value.trim();
+  const pin = E.pin.value.trim();
+  if (!name) return toast('Name is required', 'warn');
+  if (!/^\d{4}$/.test(pin)) return toast('PIN must be exactly 4 digits', 'warn');
+  const p = {
+    id: 'P-' + nxt(DB.patients, 'id', 101), name, age: Number(E.age.value), gender: E.gender.value,
+    phone: E.phone.value.trim(), blood: E.blood.value, address: E.address.value.trim() || '—', pin, reg: todayStr()
+  };
+  DB.patients.push(p);
+  S.lastReg = p;
+  audit(`Registered patient ${p.id} (${p.name})`);
+  toast(`Patient ${p.id} registered`, 'ok');
+  refresh();
+};
+
+FORMS.token = f => {
+  const E = f.elements;
+  const pid = E.pid.value, did = E.did.value, fee = Math.max(0, Number(E.fee.value) || 0);
+  if (!pOf(pid) || !dOf(did)) return toast('Select a valid patient and doctor', 'warn');
+  const dup = DB.queue.find(q => q.pid === pid && q.did === did && q.date === todayStr() && q.status !== 'done');
+  if (dup) return toast(`Patient already holds active token ${dup.token} with this doctor`, 'warn');
+  const entry = { token: 'T-' + nxt(DB.queue, 'token', 101), pid, did, fee, status: 'waiting', date: todayStr(), time: nowStr() };
+  DB.queue.push(entry);
+  const bill = mkBill('INV-' + nxt(DB.bills, 'id', 2001), 'OPD', pid, did, [{ name: 'OPD Consultation — ' + dOf(did).dept, qty: 1, price: fee, amount: fee }]);
+  DB.bills.push(bill);
+  S.lastToken = entry;
+  audit(`Issued ${entry.token} to ${pName(pid)} for ${dName(did)}`);
+  toast(`Token ${entry.token} issued`, 'ok');
+  refresh();
+  openPrint(tokenSlipHTML(entry));
+};
+
+FORMS.med = f => {
+  const E = f.elements;
+  const price = Number(E.mprice.value), stock = Number(E.mstock.value), min = Number(E.mmin.value);
+  if (!E.mname.value.trim() || !E.mexp.value) return toast('Name and expiry are required', 'warn');
+  if (price <= 0 || stock < 0 || min < 0) return toast('Enter valid price and stock values', 'warn');
+  const m = { id: 'M-' + String(nxt(DB.medicines, 'id', 1)).padStart(3, '0'), name: E.mname.value.trim(), cat: E.mcat.value.trim() || 'General', price, stock, min, expiry: E.mexp.value };
+  DB.medicines.push(m);
+  audit(`Added medicine ${m.id} (${m.name})`);
+  f.reset();
+  toggleModal('add-medicine-modal', false);
+  toast(`${m.name} added to inventory`, 'ok');
+  refresh();
+};
+
+FORMS.restock = f => {
+  const E = f.elements;
+  const m = medOf(E.rmed.value), qty = Math.floor(Number(E.rqty.value));
+  if (!m || !(qty > 0)) return toast('Select a medicine and enter a valid quantity', 'warn');
+  m.stock += qty;
+  if (E.rexp.value) m.expiry = E.rexp.value;
+  audit(`Restocked ${m.id} (${m.name}) +${qty}`);
+  f.reset();
+  toggleModal('restock-modal', false);
+  toast(`${m.name} restocked (+${qty})`, 'ok');
+  refresh();
+};
+
+FORMS.doc = f => {
+  const E = f.elements;
+  const fee = Number(E.dfee.value);
+  if (!E.dname.value.trim() || fee < 0) return toast('Enter a valid name and fee', 'warn');
+  const d = { id: 'D-' + String(nxt(DB.doctors, 'id', 1)).padStart(2, '0'), name: E.dname.value.trim(), dept: E.dept.value.trim(), cabin: E.cabin.value.trim(), fee, shift: E.shift.value, status: 'Available' };
+  DB.doctors.push(d);
+  audit(`Added doctor ${d.id} (${d.name})`);
+  f.reset();
+  toggleModal('add-doctor-modal', false);
+  toast(`${d.name} added to directory`, 'ok');
+  refresh();
+};
+
+FORMS.rx = f => {
+  const s = activeTok();
+  if (!s) return toast('No active patient', 'warn');
+  const E = f.elements;
+  const meds = E.meds.value.split('\n').map(l => l.split('|').map(x => x.trim())).filter(a => a[0])
+    .map(a => ({ name: a[0], dose: a[1] || 'As directed', freq: a[2] || '1-0-1', days: a[3] || '5 days' }));
+  if (!meds.length) return toast('Add at least one medicine (Name | Dose | Frequency | Days)', 'warn');
+  const rx = {
+    id: 'RX-' + nxt(DB.rx, 'id', 1001), pid: s.pid, did: session.did, tokenId: s.token, date: todayStr(),
+    vitals: { bp: E.bp.value.trim(), temp: E.temp.value, pulse: E.pulse.value, spo2: E.spo2.value, weight: E.weight.value },
+    symptoms: E.symptoms.value.trim(), diagnosis: E.diagnosis.value.trim(), meds, notes: E.notes.value.trim()
+  };
+  DB.rx.push(rx);
+  s.rxId = rx.id;
+  audit(`Vitals & Rx ${rx.id} saved for ${pName(s.pid)}`);
+  f.reset();
+  toggleModal('rx-modal', false);
+  toast('Vitals and prescription saved', 'ok');
+  refresh();
+  openPrint(rxHTML(rx));
+};
+
+/* ================= GLOBAL EVENT DELEGATION ================= */
+document.addEventListener('click', e => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!el || el.disabled) return;
+  const fn = ACT[el.dataset.act];
+  if (fn) { e.preventDefault(); fn(el); }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (!el || !el.dataset || !el.dataset.input) return;
+  const [type, arg] = el.dataset.input.split(':');
+  if (INPUTS[type]) INPUTS[type](el, arg);
+});
+document.addEventListener('submit', e => {
+  const f = e.target;
+  if (!f || !f.dataset || !f.dataset.form) return;
+  e.preventDefault();
+  const fn = FORMS[f.dataset.form];
+  if (fn) fn(f);
+});
+
+/* ================= BOOT ================= */
+let DB = Store.read();
+if (!DB || DB.v !== SCHEMA) DB = seed();
+
+function seed() {
+  const pts = [
+    ['P-101', 'Ahmed Raza', 34, 'Male', '0300-1111111', 'B+'],
+    ['P-102', 'Fatima Noor', 28, 'Female', '0321-2222222', 'O+'],
+    ['P-103', 'Usman Tariq', 52, 'Male', '0333-3333333', 'A-'],
+    ['P-104', 'Ayesha Bibi', 9, 'Female', '0312-4444444', 'AB+'],
+    ['P-105', 'Bilal Hussain', 41, 'Male', '0345-5555555', 'O-'],
+    ['P-106', 'Sana Mir', 63, 'Female', '0300-6666666', 'B-']
+  ].map(([id, name, age, gender, phone, blood]) => ({ id, name, age, gender, phone, blood, pin: '1234', address: 'Lahore', reg: '2025-01-10' }));
+  const doctors = [
+    { id: 'D-01', name: 'Dr. Ayesha Khan', dept: 'General Medicine', cabin: 'Cabin 1', fee: 500, shift: 'Morning', status: 'Available' },
+    { id: 'D-02', name: 'Dr. Omar Siddiqui', dept: 'Cardiology', cabin: 'Cabin 2', fee: 1200, shift: 'Morning', status: 'In OPD' },
+    { id: 'D-03', name: 'Dr. Sara Malik', dept: 'Pediatrics', cabin: 'Cabin 3', fee: 800, shift: 'Evening', status: 'Available' },
+    { id: 'D-04', name: 'Dr. Hamza Ali', dept: 'Orthopedics', cabin: 'Cabin 4', fee: 1000, shift: 'Morning', status: 'On Leave' }
+  ];
+  const meds = [
+    ['M-001', 'Paracetamol 500mg', 'Analgesic', 240, 50, addDays(400), 12],
+    ['M-002', 'Amoxicillin 500mg', 'Antibiotic', 18, 30, addDays(300), 85],
+    ['M-003', 'Omeprazole 20mg', 'Gastro', 150, 40, addDays(-10), 9],
+    ['M-004', 'Azithromycin 250mg', 'Antibiotic', 60, 20, addDays(45), 110],
+    ['M-005', 'Metformin 500mg', 'Antidiabetic', 300, 60, addDays(400), 9],
+    ['M-006', 'Cetirizine 10mg', 'Antihistamine', 120, 30, addDays(500), 6],
+    ['M-007', 'ORS Sachet', 'Electrolyte', 85, 40, addDays(600), 25],
+    ['M-008', 'Amlodipine 5mg', 'Cardiac', 200, 50, addDays(300), 14],
+    ['M-009', 'Ibuprofen 400mg', 'Analgesic', 90, 40, addDays(250), 18],
+    ['M-010', 'Oseltamivir 75mg', 'Antiviral', 22, 25, addDays(200), 340],
+    ['M-011', 'Salbutamol Inhaler', 'Respiratory', 15, 20, addDays(120), 420],
+    ['M-012', 'Pantoprazole 40mg', 'Gastro', 110, 30, addDays(330), 32]
+  ].map(([id, name, cat, stock, min, expiry, price]) => ({ id, name, cat, stock, min, expiry, price }));
+  const opd = (n, f) => ({ name: n, qty: 1, price: f, amount: f });
+  const queue = [
+    { token: 'T-101', pid: 'P-101', did: 'D-01', fee: 500, status: 'serving', date: todayStr(), time: nowStr(), calledAt: nowStr() },
+    { token: 'T-102', pid: 'P-102', did: 'D-02', fee: 1200, status: 'waiting', date: todayStr(), time: nowStr() },
+    { token: 'T-103', pid: 'P-103', did: 'D-01', fee: 500, status: 'waiting', date: todayStr(), time: nowStr() },
+    { token: 'T-104', pid: 'P-104', did: 'D-03', fee: 800, status: 'waiting', date: todayStr(), time: nowStr() },
+    { token: 'T-105', pid: 'P-105', did: 'D-01', fee: 500, status: 'waiting', date: todayStr(), time: nowStr() }
+  ];
+  const bills = [
+    mkBill('INV-2001', 'OPD', 'P-101', 'D-01', [opd('OPD Consultation — General Medicine', 500)]),
+    mkBill('INV-2002', 'OPD', 'P-102', 'D-02', [opd('OPD Consultation — Cardiology', 1200)]),
+    mkBill('INV-2003', 'OPD', 'P-104', 'D-03', [opd('OPD Consultation — Pediatrics', 800)]),
+    mkBill('INV-2004', 'Pharmacy', 'P-103', '', [{ name: 'Amoxicillin 500mg', qty: 2, price: 85, amount: 170 }, { name: 'Paracetamol 500mg', qty: 4, price: 12, amount: 48 }], 5)
+  ];
+  const rx = [{
+    id: 'RX-1001', pid: 'P-101', did: 'D-01', tokenId: 'T-101', date: addDays(-3),
+    vitals: { bp: '130/85', temp: '101.2', pulse: '96', spo2: '97', weight: '78' },
+    symptoms: 'fever, cough, body ache', diagnosis: 'Viral upper respiratory infection',
+    meds: [{ name: 'Paracetamol 500mg', dose: '1 tab', freq: '1-1-1', days: '3 days' }, { name: 'Cetirizine 10mg', dose: '1 tab', freq: '0-0-1', days: '5 days' }],
+    notes: 'Warm fluids and rest. Review if fever persists beyond 3 days.'
+  }];
+  const staff = [
+    { name: 'Imran Qureshi', role: 'Chief Executive Officer', shift: 'Administrative', status: 'Active' },
+    { name: 'Zainab Malik', role: 'Pharmacist / Reception', shift: 'Morning', status: 'Active' },
+    { name: 'Bilal Ahmed', role: 'Receptionist', shift: 'Evening', status: 'Active' },
+    { name: 'Hina Riaz', role: 'Lab Technician', shift: 'Night', status: 'On Leave' }
+  ];
+  return {
+    v: SCHEMA, patients: pts, doctors, medicines: meds, queue, bills, rx, staff,
+    audit: [{ t: nowStr(), user: 'System', action: 'Database initialised with seed data', type: 'INFO' }],
+    opdHist: [38, 44, 41, 52, 47, 36, 0], lastCalled: 'T-101'
+  };
+}
+
+(function boot() {
+  $$('.modal').forEach(m => { m.classList.add('hidden'); m.classList.remove('flex'); });
+  const sh = $('#app-shell');
+  sh.classList.add('hidden'); sh.classList.remove('flex');
+  const g = $('#auth-gateway');
+  g.classList.remove('hidden'); g.classList.add('grid');
+  Store.init();
+  $('#storage-mode').textContent = 'Storage: ' + Store.mode;
+  startSlides();
+})();
+</script>
+</body>
+</html>
